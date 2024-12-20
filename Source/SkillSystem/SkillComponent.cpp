@@ -1,5 +1,6 @@
 ﻿#include "SkillComponent.h"
 #include "Skill.h"
+#include "SkillSystem.h"
 #include "GameFramework/Pawn.h"
 #include "Net/UnrealNetwork.h"
 
@@ -23,7 +24,7 @@ bool USkillComponent::IsLocallyControlled() const
 
 USkill* USkillComponent::GetSkillOfClass(TSubclassOf<USkill> SkillClass)
 {
-	for (USkill* Skill : Skills)
+	for (USkill* Skill : OwnedSkills)
 		if (Skill && Skill->GetClass() == SkillClass)
 			return Skill;
 	
@@ -35,8 +36,7 @@ bool USkillComponent::RegisterSkill(USkill* Skill)
 	if (Skill && !GetSkillOfClass(Skill->GetClass()))
 	{
 		AddReplicatedSubObject(Skill);
-		Skills.Add(Skill);
-		Skill->SetOwningComponent(this);
+		OwnedSkills.Add(Skill);
 		return true;
 	}
 	return false;
@@ -44,10 +44,9 @@ bool USkillComponent::RegisterSkill(USkill* Skill)
 
 bool USkillComponent::DeregisterSkill(USkill* Skill)
 {
-	if (Skills.Remove(Skill))
+	if (OwnedSkills.Remove(Skill))
 	{
 		RemoveReplicatedSubObject(Skill);
-		Skill->SetOwningComponent(nullptr);
 		return true;
 	}
 	return false;
@@ -63,6 +62,11 @@ void USkillComponent::ProcessSkillData(const FSkillData& InData)
 		if (!RegisterSkill(Skill)) return;
 	}
 	Skill->UpdateSkillData(InData);
+}
+
+void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
+{
+	AppliedEffects.Add(Effect);
 }
 
 TArray<FSkillData> USkillComponent::GetClientSkillData_Implementation()
@@ -115,5 +119,6 @@ void USkillComponent::OnRegister()
 void USkillComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(USkillComponent, Skills);
+	DOREPLIFETIME(USkillComponent, OwnedSkills);
+	DOREPLIFETIME(USkillComponent, AppliedEffects);
 }

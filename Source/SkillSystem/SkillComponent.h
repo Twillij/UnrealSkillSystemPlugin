@@ -1,12 +1,14 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "SkillGlobals.h"
+#include "SkillEffect.h"
 #include "Components/ActorComponent.h"
 #include "SkillComponent.generated.h"
 
+class USkillEffect;
 class UInputAction;
 class USkill;
+struct FSkillData;
 
 UCLASS(Blueprintable)
 class SKILLSYSTEM_API USkillComponent : public UActorComponent
@@ -25,9 +27,13 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<FSkillData> PresetSkills;
     
-    // A replicated array of unique skills
+    // A replicated array of currently owned skills
     UPROPERTY(Replicated)
-    TArray<USkill*> Skills;
+    TArray<USkill*> OwnedSkills;
+
+    // A replicated array of currently applied effects
+    UPROPERTY(Replicated)
+    TArray<USkillEffect*> AppliedEffects;
 
 public:
     USkillComponent();
@@ -38,18 +44,19 @@ public:
     UFUNCTION(BlueprintPure, Category = "Component")
     AController* GetOwningController() const;
 
-    // Returns true if the owner has network authority.
+    // Returns true if the owning actor has network authority.
     UFUNCTION(BlueprintPure, Category = "Network")
     bool HasAuthority() const { return GetOwnerRole() == ROLE_Authority; }
 
+    // Returns true if the owning pawn is locally controlled.
     UFUNCTION(BlueprintPure, Category = "Network")
     bool IsLocallyControlled() const;
 
-    // Returns all the registered skills.
+    // Returns all currently owned skills.
     UFUNCTION(BlueprintPure, Category = "Skill")
-    TArray<USkill*> GetAllSkills() { return Skills; }
+    TArray<USkill*> GetOwnedSkills() { return OwnedSkills; }
 
-    // Returns a registered skill of the specified class if found, null otherwise.
+    // Returns an owned skill of the specified class if found, null otherwise.
     UFUNCTION(BlueprintPure, Category = "Skill")
     USkill* GetSkillOfClass(TSubclassOf<USkill> SkillClass);
 
@@ -64,6 +71,10 @@ public:
     // Processes a skill data and either updates an existing skill or creates a new one.
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void ProcessSkillData(const FSkillData& InData);
+
+    // Applies a skill effect to this component.
+    UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
+    void ApplySkillEffect(USkillEffect* Effect);
     
     // Default implementation returns the ClientSkillData array.
     // Intended for custom implementation to be called on the client e.g. to load skills from the client's save file.

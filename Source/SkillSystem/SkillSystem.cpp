@@ -1,8 +1,17 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "SkillSystem.h"
+#include "Skill.h"
 
-#define LOCTEXT_NAMESPACE "FSkillSystemModule"
+DEFINE_LOG_CATEGORY(LogSkill);
+
+FSkillData::FSkillData(const USkill* InSkill)
+{
+	if (!InSkill)
+		return;
+	
+	SkillClass = InSkill->GetClass();
+	bUnlocked = InSkill->bUnlocked;
+	SkillLevel = InSkill->SkillLevel;
+}
 
 void FSkillSystemModule::StartupModule()
 {
@@ -11,10 +20,8 @@ void FSkillSystemModule::StartupModule()
 
 void FSkillSystemModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+	// This function may be called during shutdown to clean up your module.
+	// For modules that support dynamic reloading, we call this function before unloading the module.
 }
 
-#undef LOCTEXT_NAMESPACE
-	
 IMPLEMENT_MODULE(FSkillSystemModule, SkillSystem)
