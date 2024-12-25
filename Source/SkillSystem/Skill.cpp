@@ -17,7 +17,16 @@ FSkillData::FSkillData(const USkill* InSkill)
 
 void USkill::NativeTick(const float DeltaSeconds)
 {
-	CooldownTimer -= DeltaSeconds;
+	if (DurationTimer > 0)
+	{
+		DurationTimer -= DeltaSeconds;
+		// TODO: Insert end of skill logic here.
+	}
+	else if (CooldownTimer > 0)
+	{
+		CooldownTimer -= DeltaSeconds;
+		// TODO: Insert end of cooldown logic here.
+	}
 	BlueprintTick(DeltaSeconds);
 }
 

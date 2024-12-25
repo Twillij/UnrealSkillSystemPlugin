@@ -8,6 +8,21 @@ class USkill;
 class USkillComponent;
 class USkillEffect;
 
+UENUM(BlueprintType)
+enum class ESkillActivationType : uint8
+{
+	Active,
+	Passive
+};
+
+UENUM(BlueprintType)
+enum class ESkillDurationType : uint8
+{
+	Instant,
+	Timed,
+	Permanent
+};
+
 USTRUCT(BlueprintType)
 struct FSkillData : public FTableRowBase
 {
@@ -57,11 +72,23 @@ public:
 	float CooldownTime = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ESkillActivationType SkillActivationType = ESkillActivationType::Active;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ESkillDurationType SkillDurationType = ESkillDurationType::Instant;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, EditCondition = "SkillDurationType == ESkillDurationType::Timed"))
+	float SkillDuration = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<TSubclassOf<USkillEffect>> Effects;
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	float CooldownTimer = 0;
+
+	UPROPERTY(BlueprintReadOnly)
+	float DurationTimer = 0;
 
 public:
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Tick")

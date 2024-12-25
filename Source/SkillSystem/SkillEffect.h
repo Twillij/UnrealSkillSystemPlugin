@@ -9,8 +9,8 @@ class USkillComponent;
 UENUM(BlueprintType)
 enum class ESkillEffectApplicationType : uint8
 {
-	Active,
-	Passive,
+	Immediate,
+	Delay,
 	Trigger
 };
 
@@ -44,7 +44,7 @@ class SKILLSYSTEM_API USkillEffect : public UObject
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ESkillEffectApplicationType ApplicationType = ESkillEffectApplicationType::Active;
+	ESkillEffectApplicationType ApplicationType = ESkillEffectApplicationType::Immediate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ESkillEffectDurationType DurationType = ESkillEffectDurationType::Instant;
