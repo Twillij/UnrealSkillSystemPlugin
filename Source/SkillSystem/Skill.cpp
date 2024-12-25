@@ -5,6 +5,22 @@
 #include "SkillSystem.h"
 #include "Net/UnrealNetwork.h"
 
+FSkillData::FSkillData(const USkill* InSkill)
+{
+	if (!InSkill) return;
+	SkillClass = InSkill->GetClass();
+	bUnlocked = InSkill->bUnlocked;
+	SkillLevel = InSkill->SkillLevel;
+	CastTime = InSkill->CastTime;
+	CooldownTime = InSkill->CooldownTime;
+}
+
+void USkill::NativeTick(const float DeltaSeconds)
+{
+	CooldownTimer -= DeltaSeconds;
+	BlueprintTick(DeltaSeconds);
+}
+
 void USkill::UpdateSkillData_Implementation(const FSkillData& SkillData)
 {
 	bUnlocked = SkillData.bUnlocked;
@@ -25,6 +41,8 @@ void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePr
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(USkill, bUnlocked);
 	DOREPLIFETIME(USkill, SkillLevel);
+	DOREPLIFETIME(USkill, CastTime);
+	DOREPLIFETIME(USkill, CooldownTime);
 }
 
 void USkill::PostInitProperties()

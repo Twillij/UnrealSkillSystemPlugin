@@ -4,9 +4,33 @@
 #include "UObject/Object.h"
 #include "Skill.generated.h"
 
+class USkill;
 class USkillComponent;
 class USkillEffect;
-struct FSkillData;
+
+USTRUCT(BlueprintType)
+struct FSkillData : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<USkill> SkillClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUnlocked = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0))
+	int32 SkillLevel = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0))
+	float CastTime = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0))
+	float CooldownTime = 0;
+
+	FSkillData() {}
+	FSkillData(const USkill* InSkill);
+};
 
 UCLASS(Blueprintable)
 class SKILLSYSTEM_API USkill : public UObject
@@ -20,20 +44,30 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText SkillDescription;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool bUnlocked = false;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, meta = (ClampMin = 0))
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0))
 	int32 SkillLevel = 0;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0))
+	float CastTime = 0;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0))
+	float CooldownTime = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<TSubclassOf<USkillEffect>> Effects;
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = "true"))
-	USkillComponent* OwningComponent = nullptr;
+	UPROPERTY(BlueprintReadOnly)
+	float CooldownTimer = 0;
 
 public:
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Tick")
+	void BlueprintTick(const float DeltaSeconds);
+	virtual void NativeTick(const float DeltaSeconds);
+	
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void UpdateSkillData(const FSkillData& SkillData);
 	
