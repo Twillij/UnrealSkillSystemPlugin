@@ -1,6 +1,5 @@
 ﻿#include "SkillComponent.h"
 #include "Skill.h"
-#include "SkillSystem.h"
 #include "GameFramework/Pawn.h"
 #include "Net/UnrealNetwork.h"
 
@@ -121,4 +120,19 @@ void USkillComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(USkillComponent, OwnedSkills);
 	DOREPLIFETIME(USkillComponent, AppliedEffects);
+}
+
+void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	for (USkill* Skill : OwnedSkills)
+	{
+		Skill->NativeTick(DeltaTime);
+	}
+	
+	for (USkillEffect* Effect : AppliedEffects)
+	{
+		Effect->NativeTick(DeltaTime);
+	}
 }
