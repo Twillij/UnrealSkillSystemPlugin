@@ -1,6 +1,18 @@
 ﻿#include "SkillFunctionLibrary.h"
 #include "Skill.h"
+#include "SkillSystem.h"
+#include "SkillComponent.h"
 #include "EnhancedInputComponent.h"
+
+USkill* USkillFunctionLibrary::CreateSkill(USkillComponent* OwningComponent, const FSkillData& SkillData)
+{
+	if (USkill* NewSkill = NewObject<USkill>(OwningComponent, SkillData.SkillClass))
+	{
+		NewSkill->UpdateSkillData(SkillData);
+		return NewSkill;
+	}
+	return nullptr;
+}
 
 bool USkillFunctionLibrary::BindSkillToInput(const APlayerController* PlayerController, const FName InputActionName,
 	const EInputEvent InputEvent, USkill* Skill)
