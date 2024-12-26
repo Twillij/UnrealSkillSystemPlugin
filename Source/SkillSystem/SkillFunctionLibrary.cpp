@@ -14,13 +14,18 @@ USkill* USkillFunctionLibrary::CreateSkill(USkillComponent* OwningComponent, con
 	return nullptr;
 }
 
+FSkillData USkillFunctionLibrary::CreateSkillData(USkill* Skill)
+{
+	return FSkillData(Skill);
+}
+
 bool USkillFunctionLibrary::BindSkillToInput(const APlayerController* PlayerController, const FName InputActionName,
 	const EInputEvent InputEvent, USkill* Skill)
 {
 	if (!Skill || !PlayerController || !PlayerController->InputComponent || !PlayerController->IsLocalPlayerController())
 		return false;
 
-	FInputActionBinding& Binding = PlayerController->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::ActivateSkill);
+	FInputActionBinding& Binding = PlayerController->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::CastSkill);
 	return true;
 }
 
@@ -32,7 +37,7 @@ bool USkillFunctionLibrary::BindSkillToEnhancedInput(const APlayerController* Pl
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 	{
-		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::ActivateSkill);
+		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::CastSkill);
 		return true;
 	}
 	return false;

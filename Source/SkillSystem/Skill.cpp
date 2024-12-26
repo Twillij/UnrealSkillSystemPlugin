@@ -1,5 +1,4 @@
 ﻿#include "Skill.h"
-
 #include "SkillComponent.h"
 #include "SkillEffect.h"
 #include "SkillSystem.h"
@@ -12,37 +11,69 @@ FSkillData::FSkillData(const USkill* InSkill)
 	bUnlocked = InSkill->bUnlocked;
 	SkillLevel = InSkill->SkillLevel;
 	CastTime = InSkill->CastTime;
-	CooldownTime = InSkill->CooldownTime;
-}
-
-void USkill::NativeTick(const float DeltaSeconds)
-{
-	if (DurationTimer > 0)
-	{
-		DurationTimer -= DeltaSeconds;
-		// TODO: Insert end of skill logic here.
-	}
-	else if (CooldownTimer > 0)
-	{
-		CooldownTimer -= DeltaSeconds;
-		// TODO: Insert end of cooldown logic here.
-	}
-	BlueprintTick(DeltaSeconds);
+	Duration = InSkill->Duration;
+	Cooldown = InSkill->Cooldown;
 }
 
 void USkill::UpdateSkillData_Implementation(const FSkillData& SkillData)
 {
 	bUnlocked = SkillData.bUnlocked;
 	SkillLevel = SkillData.SkillLevel;
+	CastTime = SkillData.CastTime;
+	Duration = SkillData.Duration;
+	Cooldown = SkillData.Cooldown;
+}
+
+void USkill::CastSkill_Implementation()
+{
+	CastTimer = CastTime;
+}
+
+bool USkill::ValidateSkillCast_Implementation()
+{
+	return bUnlocked;
 }
 
 void USkill::ActivateSkill_Implementation()
 {
+	DurationTimer = Duration;
 	
 	for (TSubclassOf<USkillEffect> Effect : Effects)
 	{
 		
 	}
+}
+
+void USkill::DeactivateSkill_Implementation()
+{
+	CooldownTimer = Cooldown;
+}
+
+void USkill::NativeTick(const float DeltaSeconds)
+{
+	if (CastTimer > 0)
+	{
+		CastTimer -= DeltaSeconds;
+		
+		if (CastTimer > 0)
+		{
+			ValidateSkillCast();
+		}
+		else // CastTimer <= 0
+		{
+			ActivateSkill();
+		}
+	}
+	else if (DurationTimer > 0)
+	{
+		DurationTimer -= DeltaSeconds;
+		if (DurationTimer <= 0) DeactivateSkill();
+	}
+	else if (CooldownTimer > 0)
+	{
+		CooldownTimer -= DeltaSeconds;
+	}
+	BlueprintTick(DeltaSeconds);
 }
 
 void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -51,7 +82,8 @@ void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePr
 	DOREPLIFETIME(USkill, bUnlocked);
 	DOREPLIFETIME(USkill, SkillLevel);
 	DOREPLIFETIME(USkill, CastTime);
-	DOREPLIFETIME(USkill, CooldownTime);
+	DOREPLIFETIME(USkill, Duration);
+	DOREPLIFETIME(USkill, Cooldown);
 }
 
 void USkill::PostInitProperties()

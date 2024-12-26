@@ -19,6 +19,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Skill")
 	static USkill* CreateSkill(USkillComponent* OwningComponent, const FSkillData& SkillData);
 
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	static FSkillData CreateSkillData(USkill* Skill);
+
 	UFUNCTION(BlueprintCallable, Category = "Skill|Input")
 	static bool BindSkillToInput(const APlayerController* PlayerController, const FName InputActionName,
 		const EInputEvent InputEvent, USkill* Skill);
