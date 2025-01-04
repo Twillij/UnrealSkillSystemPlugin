@@ -1,4 +1,6 @@
 ﻿#include "SkillComponent.h"
+
+#include "EnhancedInputComponent.h"
 #include "Skill.h"
 #include "GameFramework/Pawn.h"
 #include "Net/UnrealNetwork.h"
@@ -68,6 +70,34 @@ void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
 	AppliedEffects.Add(Effect);
 }
 
+bool USkillComponent::BindSkillToInput(const TSubclassOf<USkill> SkillClass, const FName InputActionName, const EInputEvent InputEvent)
+{
+	USkill* Skill = GetSkillOfClass(SkillClass);
+	const AController* Controller = GetOwningController();
+	
+	if (!Skill || !Controller || !Controller->InputComponent || !Controller->IsLocalPlayerController())
+		return false;
+
+	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::StartSkill);
+	return true;
+}
+
+bool USkillComponent::BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillClass, const UInputAction* InputAction, const ETriggerEvent TriggerEvent)
+{
+	USkill* Skill = GetSkillOfClass(SkillClass);
+	const AController* Controller = GetOwningController();
+	
+	if (!InputAction || !Skill || !Controller || !Controller->InputComponent || !Controller->IsLocalPlayerController())
+		return false;
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Controller->InputComponent))
+	{
+		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::StartSkill);
+		return true;
+	}
+	return false;
+}
+
 TArray<FSkillData> USkillComponent::GetClientSkillData_Implementation()
 {
 	return ClientSkillData;
@@ -128,7 +158,7 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 
 	for (USkill* Skill : OwnedSkills)
 	{
-		Skill->NativeTick(DeltaTime);
+		Skill->Tick(DeltaTime);
 	}
 	
 	for (USkillEffect* Effect : AppliedEffects)

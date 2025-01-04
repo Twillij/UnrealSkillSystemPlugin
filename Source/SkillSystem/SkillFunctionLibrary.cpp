@@ -1,6 +1,5 @@
 ﻿#include "SkillFunctionLibrary.h"
 #include "Skill.h"
-#include "SkillSystem.h"
 #include "SkillComponent.h"
 #include "EnhancedInputComponent.h"
 
@@ -17,28 +16,4 @@ USkill* USkillFunctionLibrary::CreateSkill(USkillComponent* OwningComponent, con
 FSkillData USkillFunctionLibrary::CreateSkillData(USkill* Skill)
 {
 	return FSkillData(Skill);
-}
-
-bool USkillFunctionLibrary::BindSkillToInput(const APlayerController* PlayerController, const FName InputActionName,
-	const EInputEvent InputEvent, USkill* Skill)
-{
-	if (!Skill || !PlayerController || !PlayerController->InputComponent || !PlayerController->IsLocalPlayerController())
-		return false;
-
-	FInputActionBinding& Binding = PlayerController->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::CastSkill);
-	return true;
-}
-
-bool USkillFunctionLibrary::BindSkillToEnhancedInput(const APlayerController* PlayerController, const UInputAction* InputAction,
-	const ETriggerEvent TriggerEvent, USkill* Skill)
-{
-	if (!InputAction || !Skill || !PlayerController || !PlayerController->InputComponent || !PlayerController->IsLocalPlayerController())
-		return false;
-
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
-	{
-		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::CastSkill);
-		return true;
-	}
-	return false;
 }

@@ -5,10 +5,13 @@
 #include "Components/ActorComponent.h"
 #include "SkillComponent.generated.h"
 
+enum class ETriggerEvent : uint8;
+struct FSkillData;
 class USkillEffect;
 class UInputAction;
 class USkill;
-struct FSkillData;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSkillCastDelegate);
 
 UCLASS(Blueprintable)
 class SKILLSYSTEM_API USkillComponent : public UActorComponent
@@ -16,9 +19,12 @@ class SKILLSYSTEM_API USkillComponent : public UActorComponent
     GENERATED_BODY()
 
 public:
-    // Intended for modifying on the client only, e.g. to load skills from the client's save file.
+    UPROPERTY(BlueprintAssignable)
+    FSkillCastDelegate SkillCastDelegate;
+    
+    // Intended to be modified on the client only, e.g. to load skills from the client's save file.
     // Will be sent to and processed by the server whenever ClientUploadSkillData() is called.
-    // Afterwards, a copy of the data will be stored on the server for caching purposes only.
+    // Afterwards, a copy of the data will be stored on the server for caching purposes.
     UPROPERTY(BlueprintReadWrite, Category = "Skill|Network")
     TArray<FSkillData> ClientSkillData;
     
@@ -72,9 +78,18 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void ProcessSkillData(const FSkillData& InData);
 
+    
+    
+    
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
     void ApplySkillEffect(USkillEffect* Effect);
+
+    UFUNCTION(BlueprintCallable, Category = "Skill|Input")
+    bool BindSkillToInput(const TSubclassOf<USkill> SkillClass, const FName InputActionName, const EInputEvent InputEvent);
+
+    UFUNCTION(BlueprintCallable, Category = "Skill|Input")
+    bool BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillClass, const UInputAction* InputAction, const ETriggerEvent TriggerEvent);
     
     // Default implementation returns the ClientSkillData array.
     // Intended for custom implementation to be called on the client e.g. to load skills from the client's save file.

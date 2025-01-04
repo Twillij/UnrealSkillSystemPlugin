@@ -41,9 +41,11 @@ class SKILLSYSTEM_API USkill : public UObject
 	GENERATED_BODY()
 
 public:
+	// The skill name to be displayed to the player
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText SkillName;
-	
+
+	// The skill description to be displayed to the player
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText SkillDescription;
 
@@ -60,7 +62,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPassive = false;
 
-	// How long it takes for a skill to be cast
+	// How long it takes for a skill to be cast.
+	// If set to 0 or lower, casting will be skipped completely.
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", EditCondition = "!bPassive"))
 	float CastTime = 0;
 	
@@ -73,45 +76,65 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", EditCondition = "!bPassive"))
 	float Cooldown = 0;
 
+	// The timer used for counting down casting
+	UPROPERTY(BlueprintReadWrite)
+	float CastTimer = 0;
+
+	// The timer used for counting down activation duration
+	UPROPERTY(BlueprintReadWrite)
+	float DurationTimer = 0;
+
+	// The timer used for counting down cooldown
+	UPROPERTY(BlueprintReadWrite)
+	float CooldownTimer = 0;
+	
 	// An array of effects that will be applied when this skill is activated
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<TSubclassOf<USkillEffect>> Effects;
 
-protected:
-	UPROPERTY(BlueprintReadOnly)
-	float CastTimer = 0;
-
-	UPROPERTY(BlueprintReadOnly)
-	float DurationTimer = 0;
-
-	UPROPERTY(BlueprintReadOnly)
-	float CooldownTimer = 0;
-
 public:
-	virtual void operator=(const FSkillData& SkillData) { UpdateSkillData(SkillData); }
+	UFUNCTION(BlueprintPure)
+	USkillComponent* GetOwningComponent() const;
 
-	float GetCastTimer() const { return CastTimer; }
-	float GetDurationTimer() const { return DurationTimer; }
-	float GetCooldownTimer() const { return CooldownTimer; }
+	UFUNCTION(BlueprintPure)
+	bool HasAuthority() const;
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void UpdateSkillData(const FSkillData& SkillData);
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	void CastSkill();
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	bool ValidateSkillCast();
+	// player presses skill button (client)
+	// select target if applicable (client)
+	// try cast skill
+	// validate skill pre-cast (check mana, is target in range, etc) (server)
+	// if validated, start casting (start timer, casting anim, etc) (server+client)
+	// continuously validate skill mid-cast (server)
+	// if validation fails mid-cast, stop casting (stop timer, anim, etc) (server+client)
+	// when cast finishes without failing, try activate skill
+	// validate skill pre activation (check mana, is target in range, etc) (server)
+	// if validated, activate skill + start duration (server+client)
+	// when duration is over or manually cancelled, deactivate skill (server+client)
+	// upon deactivation, start cooldown (server)
+
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill")
+	void StartSkill();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	void ActivateSkill();
+	void TryCastSkill();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
+	void TryActivateSkill();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
 	void DeactivateSkill();
-
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Tick")
-	void BlueprintTick(const float DeltaSeconds);
-	virtual void NativeTick(const float DeltaSeconds);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
+	void StartCastingSkill();
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
+	void StopCastingSkill();
+	
+	UFUNCTION(BlueprintNativeEvent)
+	void Tick(const float DeltaSeconds);
 	
 	UFUNCTION(BlueprintPure, Category = "Debug")
 	FString GetClassName() const { return GetClass()->GetName(); }
@@ -123,5 +146,25 @@ protected:
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitProperties() override;
-};
 
+	UFUNCTION(BlueprintNativeEvent, Category = "Object")
+	void BeginPlay();
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
+	bool ValidateSkillPreCast(FString& ValidationLog);
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
+	bool ValidateSkillMidCast(FString& ValidationLog);
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
+	bool ValidateSkillPreActivation(FString& ValidationLog);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
+	void OnReceivePreCastValidation(const bool bSuccess, const FString& ValidationLog);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
+	void OnReceiveMidCastValidation(const bool bSuccess, const FString& ValidationLog);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
+	void OnReceivePreActivationValidation(const bool bSuccess, const FString& ValidationLog);
+};

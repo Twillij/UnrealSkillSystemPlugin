@@ -24,23 +24,50 @@ void USkill::UpdateSkillData_Implementation(const FSkillData& SkillData)
 	Cooldown = SkillData.Cooldown;
 }
 
-void USkill::CastSkill_Implementation()
+USkillComponent* USkill::GetOwningComponent() const
 {
-	CastTimer = CastTime;
+	return Cast<USkillComponent>(GetOuter());
 }
 
-bool USkill::ValidateSkillCast_Implementation()
+bool USkill::HasAuthority() const
 {
-	return bUnlocked;
+	const USkillComponent* OwningComponent = GetOwningComponent();
+	return OwningComponent ? OwningComponent->HasAuthority() : false;
 }
 
-void USkill::ActivateSkill_Implementation()
+void USkill::StartSkill_Implementation()
 {
-	DurationTimer = Duration;
-	
-	for (TSubclassOf<USkillEffect> Effect : Effects)
+	if (CastTime > 0)
 	{
-		
+		TryCastSkill();
+	}
+	else
+	{
+		TryActivateSkill();
+	}
+}
+
+void USkill::TryCastSkill_Implementation()
+{
+	FString ValidationLog;
+	const bool bValidated = ValidateSkillPreCast(ValidationLog);
+	OnReceivePreCastValidation(bValidated, ValidationLog);
+	
+	if (bValidated)
+	{
+		StartCastingSkill();
+	}
+}
+
+void USkill::TryActivateSkill_Implementation()
+{
+	FString ValidationLog;
+	const bool bValidated = ValidateSkillPreActivation(ValidationLog);
+	OnReceivePreActivationValidation(bValidated, ValidationLog);
+
+	if (bValidated)
+	{
+		DurationTimer = Duration;
 	}
 }
 
@@ -49,7 +76,17 @@ void USkill::DeactivateSkill_Implementation()
 	CooldownTimer = Cooldown;
 }
 
-void USkill::NativeTick(const float DeltaSeconds)
+void USkill::StartCastingSkill_Implementation()
+{
+	CastTimer = CastTime;
+}
+
+void USkill::StopCastingSkill_Implementation()
+{
+	CastTimer = 0;
+}
+
+void USkill::Tick_Implementation(const float DeltaSeconds)
 {
 	if (CastTimer > 0)
 	{
@@ -57,11 +94,16 @@ void USkill::NativeTick(const float DeltaSeconds)
 		
 		if (CastTimer > 0)
 		{
-			ValidateSkillCast();
+			FString ValidationLog;
+			if (!ValidateSkillMidCast(ValidationLog))
+			{
+				OnReceiveMidCastValidation(false, ValidationLog);
+				StopCastingSkill();
+			}
 		}
 		else // CastTimer <= 0
 		{
-			ActivateSkill();
+			TryActivateSkill();
 		}
 	}
 	else if (DurationTimer > 0)
@@ -73,7 +115,6 @@ void USkill::NativeTick(const float DeltaSeconds)
 	{
 		CooldownTimer -= DeltaSeconds;
 	}
-	BlueprintTick(DeltaSeconds);
 }
 
 void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -92,9 +133,33 @@ void USkill::PostInitProperties()
 	
 	if (GetWorld() && GetWorld()->IsGameWorld())
 	{
-		if (!GetOuter() || !GetOuter()->IsA(USkillComponent::StaticClass()))
-		{
-			UE_LOG(LogSkill, Error, TEXT("Invalid skill outer. Outer is expected to be its owning skill component."))
-		}
+		BeginPlay();
 	}
+}
+
+void USkill::BeginPlay_Implementation()
+{
+	if (!GetOwningComponent())
+	{
+		UE_LOG(LogSkill, Error, TEXT("%s has an invalid skill outer. Outer is expected to be its owning skill component."), *GetName())
+	}
+}
+
+bool USkill::ValidateSkillPreCast_Implementation(FString& ValidationLog)
+{
+	const bool bSuccess = bUnlocked;
+	if (!bUnlocked) ValidationLog.Append("LOCKED;");
+	return bSuccess;
+}
+
+bool USkill::ValidateSkillMidCast_Implementation(FString& ValidationLog)
+{
+	return true;
+}
+
+bool USkill::ValidateSkillPreActivation_Implementation(FString& ValidationLog)
+{
+	const bool bSuccess = bUnlocked;
+	if (!bUnlocked) ValidationLog.Append("LOCKED;");
+	return bSuccess;
 }
