@@ -9,6 +9,8 @@ class SKILLSYSTEM_API UOnlineSkill : public USkill
 	GENERATED_BODY()
 
 public:
+	virtual void RequestOwnerToExecute() override;
+	
 	virtual void TryCastSkill_Implementation() override;
 	virtual void TryActivateSkill_Implementation() override;
 

@@ -35,15 +35,11 @@ bool USkill::HasAuthority() const
 	return OwningComponent ? OwningComponent->HasAuthority() : false;
 }
 
-void USkill::StartSkill_Implementation()
+void USkill::RequestOwnerToExecute()
 {
-	if (CastTime > 0)
+	if (USkillComponent* Owner = GetOwningComponent())
 	{
-		TryCastSkill();
-	}
-	else
-	{
-		TryActivateSkill();
+		Owner->ExecuteSkill(this);
 	}
 }
 

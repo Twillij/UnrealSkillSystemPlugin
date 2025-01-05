@@ -66,27 +66,33 @@ public:
 	// If set to 0 or lower, casting will be skipped completely.
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", EditCondition = "!bPassive"))
 	float CastTime = 0;
+
+	// The timer used for counting down casting
+	UPROPERTY(BlueprintReadWrite)
+	float CastTimer = 0;
 	
 	// How long a skill lasts or stays active.
 	// If set to 0, it will be instant. If set to a negative number, it will be permanent.
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (EditCondition = "!bPassive"))
 	float Duration = 0;
 
-	// How long before a skill can be recast
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", EditCondition = "!bPassive"))
-	float Cooldown = 0;
-
-	// The timer used for counting down casting
-	UPROPERTY(BlueprintReadWrite)
-	float CastTimer = 0;
-
 	// The timer used for counting down activation duration
 	UPROPERTY(BlueprintReadWrite)
 	float DurationTimer = 0;
-
+	
+	// How long before a skill can be recast
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0", EditCondition = "!bPassive"))
+	float Cooldown = 0;
+	
 	// The timer used for counting down cooldown
 	UPROPERTY(BlueprintReadWrite)
 	float CooldownTimer = 0;
+
+	// The max possible distance between the skill user and the target of the skill.
+	// If the target goes out of range, the skill cast or activation will be interrupted.
+	// If set to 0 or lower, then the range is treated as infinite.
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
+	float Range = 0;
 	
 	// An array of effects that will be applied when this skill is activated
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -115,8 +121,8 @@ public:
 	// when duration is over or manually cancelled, deactivate skill (server+client)
 	// upon deactivation, start cooldown (server)
 
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill")
-	void StartSkill();
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	virtual void RequestOwnerToExecute();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
 	void TryCastSkill();
@@ -132,6 +138,15 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
 	void StopCastingSkill();
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
+	bool ValidateSkillPreCast(FString& ValidationLog);
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
+	bool ValidateSkillMidCast(FString& ValidationLog);
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
+	bool ValidateSkillPreActivation(FString& ValidationLog);
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void Tick(const float DeltaSeconds);
@@ -150,14 +165,7 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Object")
 	void BeginPlay();
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool ValidateSkillPreCast(FString& ValidationLog);
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool ValidateSkillMidCast(FString& ValidationLog);
-	
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool ValidateSkillPreActivation(FString& ValidationLog);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
 	void OnReceivePreCastValidation(const bool bSuccess, const FString& ValidationLog);

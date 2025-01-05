@@ -1,7 +1,7 @@
 ﻿#include "SkillComponent.h"
-
 #include "EnhancedInputComponent.h"
 #include "Skill.h"
+#include "SkillEffect.h"
 #include "GameFramework/Pawn.h"
 #include "Net/UnrealNetwork.h"
 
@@ -32,9 +32,14 @@ USkill* USkillComponent::GetSkillOfClass(TSubclassOf<USkill> SkillClass)
 	return nullptr;
 }
 
+bool USkillComponent::HasSkill(const USkill* Skill) const
+{
+	return Skill && OwnedSkills.Contains(Skill);
+}
+
 bool USkillComponent::RegisterSkill(USkill* Skill)
 {
-	if (Skill && !GetSkillOfClass(Skill->GetClass()))
+	if (Skill && !OwnedSkills.Contains(Skill))
 	{
 		AddReplicatedSubObject(Skill);
 		OwnedSkills.Add(Skill);
@@ -65,6 +70,46 @@ void USkillComponent::ProcessSkillData(const FSkillData& InData)
 	Skill->UpdateSkillData(InData);
 }
 
+void USkillComponent::ExecuteSkill(USkill* Skill)
+{
+	if (!HasSkill(Skill)) return;
+
+	if (Skill->CastTime > 0)
+	{
+		TryCastSkill(Skill);
+	}
+	else // CastTime <= 0
+	{
+		TryActivateSkill(Skill);
+	}
+}
+
+void USkillComponent::ExecuteSkillOfClass(const TSubclassOf<USkill> SkillClass)
+{
+	ExecuteSkill(GetSkillOfClass(SkillClass));
+}
+
+bool USkillComponent::TryCastSkill(USkill* Skill)
+{
+	FString Results;
+	const bool bValidated = ValidateSkillPreCast(Skill, Results);
+	ClientReceiveSkillPreCastValidation(Skill, bValidated, Results);
+	OnReceiveSkillPreCastValidation.Broadcast(Skill, bValidated, Results);
+	//Skill->TryCastSkill();
+	
+	if (bValidated)
+	{
+		//StartCastingSkill();
+	}
+	return bValidated;
+}
+
+bool USkillComponent::TryActivateSkill(USkill* Skill)
+{
+	Skill->TryActivateSkill();
+	return true;
+}
+
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
 {
 	AppliedEffects.Add(Effect);
@@ -78,7 +123,7 @@ bool USkillComponent::BindSkillToInput(const TSubclassOf<USkill> SkillClass, con
 	if (!Skill || !Controller || !Controller->InputComponent || !Controller->IsLocalPlayerController())
 		return false;
 
-	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::StartSkill);
+	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::RequestOwnerToExecute);
 	return true;
 }
 
@@ -92,7 +137,7 @@ bool USkillComponent::BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillCl
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Controller->InputComponent))
 	{
-		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::StartSkill);
+		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::RequestOwnerToExecute);
 		return true;
 	}
 	return false;
@@ -165,4 +210,18 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 	{
 		Effect->NativeTick(DeltaTime);
 	}
+}
+
+bool USkillComponent::ValidateSkillPreCast(USkill* Skill, FString& Results) const
+{
+	if (HasSkill(Skill))
+	{
+		return Skill->ValidateSkillPreCast(Results);
+	}
+	return false;
+}
+
+void USkillComponent::ClientReceiveSkillPreCastValidation_Implementation(USkill* Skill, const bool bSuccess, const FString& Results)
+{
+	OnReceiveSkillPreCastValidation.Broadcast(Skill, bSuccess, Results);
 }

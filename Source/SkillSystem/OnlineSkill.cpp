@@ -1,4 +1,13 @@
 #include "OnlineSkill.h"
+#include "OnlineSkillComponent.h"
+
+void UOnlineSkill::RequestOwnerToExecute()
+{
+	if (UOnlineSkillComponent* Owner = Cast<UOnlineSkillComponent>(GetOwningComponent()))
+	{
+		Owner->ServerExecuteSkill(this);
+	}
+} 
 
 void UOnlineSkill::TryCastSkill_Implementation()
 {
