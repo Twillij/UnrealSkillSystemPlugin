@@ -84,17 +84,10 @@ void USkillComponent::ExecuteSkill(USkill* Skill)
 	}
 }
 
-void USkillComponent::ExecuteSkillOfClass(const TSubclassOf<USkill> SkillClass)
-{
-	ExecuteSkill(GetSkillOfClass(SkillClass));
-}
-
 bool USkillComponent::TryCastSkill(USkill* Skill)
 {
-	FString Results;
-	const bool bValidated = ValidateSkillPreCast(Skill, Results);
-	ClientReceiveSkillPreCastValidation(Skill, bValidated, Results);
-	OnReceiveSkillPreCastValidation.Broadcast(Skill, bValidated, Results);
+	FString ErrorLog;
+	const bool bValidated = ValidateSkillPreCast(Skill, ErrorLog);
 	//Skill->TryCastSkill();
 	
 	if (bValidated)
@@ -106,8 +99,30 @@ bool USkillComponent::TryCastSkill(USkill* Skill)
 
 bool USkillComponent::TryActivateSkill(USkill* Skill)
 {
-	Skill->TryActivateSkill();
-	return true;
+	bool bValidated;
+	FString ErrorLog;
+	ValidateSkillPreActivation(Skill, bValidated, ErrorLog);
+	
+	if (bValidated)
+	{
+		Skill->StartActivation();
+	}
+	else
+	{
+		OnSkillPreActivationValidationError.Broadcast(Skill, ErrorLog);
+	}
+	
+	return bValidated;
+}
+
+bool USkillComponent::CanSkillBeCast(USkill* Skill, FString& ErrorLog) const
+{
+	return HasSkill(Skill) && Skill->CanSkillBeCast(ErrorLog);
+}
+
+bool USkillComponent::CanSkillBeActivated(USkill* Skill, FString& ErrorLog) const
+{
+	return HasSkill(Skill) && Skill->CanSkillBeActivated(ErrorLog);
 }
 
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
@@ -212,16 +227,16 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 	}
 }
 
-bool USkillComponent::ValidateSkillPreCast(USkill* Skill, FString& Results) const
+bool USkillComponent::ValidateSkillPreCast(USkill* Skill, FString& ErrorLog) const
 {
 	if (HasSkill(Skill))
 	{
-		return Skill->ValidateSkillPreCast(Results);
+		return Skill->CanSkillBeCast(ErrorLog);
 	}
 	return false;
 }
 
-void USkillComponent::ClientReceiveSkillPreCastValidation_Implementation(USkill* Skill, const bool bSuccess, const FString& Results)
+void USkillComponent::ValidateSkillPreActivation(USkill* Skill, bool& bValidated, FString& ErrorLog) const
 {
-	OnReceiveSkillPreCastValidation.Broadcast(Skill, bSuccess, Results);
+	bValidated = Skill && CanSkillBeActivated(Skill, ErrorLog);
 }

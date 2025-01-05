@@ -45,9 +45,9 @@ void USkill::RequestOwnerToExecute()
 
 void USkill::TryCastSkill_Implementation()
 {
-	FString ValidationLog;
-	const bool bValidated = ValidateSkillPreCast(ValidationLog);
-	OnReceivePreCastValidation(bValidated, ValidationLog);
+	FString ErrorLog;
+	const bool bValidated = CanSkillBeCast(ErrorLog);
+	OnReceivePreCastValidation(bValidated, ErrorLog);
 	
 	if (bValidated)
 	{
@@ -55,16 +55,9 @@ void USkill::TryCastSkill_Implementation()
 	}
 }
 
-void USkill::TryActivateSkill_Implementation()
+void USkill::StartActivation_Implementation()
 {
-	FString ValidationLog;
-	const bool bValidated = ValidateSkillPreActivation(ValidationLog);
-	OnReceivePreActivationValidation(bValidated, ValidationLog);
-
-	if (bValidated)
-	{
-		DurationTimer = Duration;
-	}
+	DurationTimer = Duration;
 }
 
 void USkill::DeactivateSkill_Implementation()
@@ -90,16 +83,16 @@ void USkill::Tick_Implementation(const float DeltaSeconds)
 		
 		if (CastTimer > 0)
 		{
-			FString ValidationLog;
-			if (!ValidateSkillMidCast(ValidationLog))
+			FString ErrorLog;
+			if (!ValidateSkillMidCast(ErrorLog))
 			{
-				OnReceiveMidCastValidation(false, ValidationLog);
+				OnReceiveMidCastValidation(false, ErrorLog);
 				StopCastingSkill();
 			}
 		}
 		else // CastTimer <= 0
 		{
-			TryActivateSkill();
+			
 		}
 	}
 	else if (DurationTimer > 0)
@@ -141,21 +134,21 @@ void USkill::BeginPlay_Implementation()
 	}
 }
 
-bool USkill::ValidateSkillPreCast_Implementation(FString& ValidationLog)
+bool USkill::CanSkillBeCast_Implementation(FString& ErrorLog)
 {
 	const bool bSuccess = bUnlocked;
-	if (!bUnlocked) ValidationLog.Append("LOCKED;");
+	if (!bUnlocked) ErrorLog.Append("LOCKED;");
 	return bSuccess;
 }
 
-bool USkill::ValidateSkillMidCast_Implementation(FString& ValidationLog)
+bool USkill::ValidateSkillMidCast_Implementation(FString& ErrorLog)
 {
 	return true;
 }
 
-bool USkill::ValidateSkillPreActivation_Implementation(FString& ValidationLog)
+bool USkill::CanSkillBeActivated_Implementation(FString& ErrorLog)
 {
 	const bool bSuccess = bUnlocked;
-	if (!bUnlocked) ValidationLog.Append("LOCKED;");
+	if (!bUnlocked) ErrorLog.Append("LOCKED;");
 	return bSuccess;
 }

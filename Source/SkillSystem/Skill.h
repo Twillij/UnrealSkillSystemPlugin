@@ -128,7 +128,7 @@ public:
 	void TryCastSkill();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	void TryActivateSkill();
+	void StartActivation();
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
 	void DeactivateSkill();
@@ -140,13 +140,13 @@ public:
 	void StopCastingSkill();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool ValidateSkillPreCast(FString& ValidationLog);
+	bool CanSkillBeCast(FString& ErrorLog);
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool ValidateSkillMidCast(FString& ValidationLog);
+	bool ValidateSkillMidCast(FString& ErrorLog);
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool ValidateSkillPreActivation(FString& ValidationLog);
+	bool CanSkillBeActivated(FString& ErrorLog);
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void Tick(const float DeltaSeconds);
@@ -168,11 +168,11 @@ protected:
 	
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
-	void OnReceivePreCastValidation(const bool bSuccess, const FString& ValidationLog);
+	void OnReceivePreCastValidation(const bool bSuccess, const FString& ErrorLog);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
-	void OnReceiveMidCastValidation(const bool bSuccess, const FString& ValidationLog);
+	void OnReceiveMidCastValidation(const bool bSuccess, const FString& ErrorLog);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
-	void OnReceivePreActivationValidation(const bool bSuccess, const FString& ValidationLog);
+	void OnReceivePreActivationValidation(const bool bSuccess, const FString& ErrorLog);
 };

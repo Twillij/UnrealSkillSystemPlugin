@@ -11,7 +11,7 @@ class UInputAction;
 class USkill;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSkillCastDelegate);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnReceiveSkillValidation, USkill*, Skill, const bool, bSuccess, const FString&, Results);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillValidationError, USkill*, Skill, const FString&, ErrorLog);
 
 UCLASS(Blueprintable)
 class SKILLSYSTEM_API USkillComponent : public UActorComponent
@@ -23,7 +23,7 @@ public:
     FSkillCastDelegate SkillCastDelegate;
 
     UPROPERTY(BlueprintAssignable)
-    FOnReceiveSkillValidation OnReceiveSkillPreCastValidation;
+    FOnSkillValidationError OnSkillPreActivationValidationError;
     
     // Intended to be modified on the client only, e.g. to load skills from the client's save file.
     // Will be sent to and processed by the server whenever ClientUploadSkillData() is called.
@@ -84,25 +84,18 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void ProcessSkillData(const FSkillData& InData);
 
-    /// client skill requests server comp to execute skill
-    /// server comp tries to execute skill
-    /// server comp tries to validate cast
-    /// server comp sends validation results to client
-    /// if successful, server + client comp starts casting
-    /// server comp validates mid-cast per frame, sends results to client in case of failure
-    /// 
-
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
     void ExecuteSkill(USkill* Skill);
     
-    UFUNCTION(BlueprintCallable)
-    void ExecuteSkillOfClass(TSubclassOf<USkill> SkillClass);
-
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
     bool TryCastSkill(USkill* Skill);
 
-    UFUNCTION(BlueprintCallable)
-    bool TryActivateSkill(USkill* Skill);
+    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
+    virtual bool TryActivateSkill(USkill* Skill);
+
+    bool CanSkillBeCast(USkill* Skill, FString& ErrorLog) const;
+
+    bool CanSkillBeActivated(USkill* Skill, FString& ErrorLog) const;
     
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
@@ -142,8 +135,7 @@ protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void TickComponent(const float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
     
-    bool ValidateSkillPreCast(USkill* Skill, FString& Results) const;
+    bool ValidateSkillPreCast(USkill* Skill, FString& ErrorLog) const;
 
-    UFUNCTION(Client, Reliable, Category = "Skill|Network")
-    void ClientReceiveSkillPreCastValidation(USkill* Skill, const bool bSuccess, const FString& Results);
+    void ValidateSkillPreActivation(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
 };
