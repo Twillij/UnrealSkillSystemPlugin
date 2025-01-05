@@ -10,7 +10,7 @@ class USkillEffect;
 class UInputAction;
 class USkill;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSkillCastDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillStateChanged, USkill*, Skill);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillValidationError, USkill*, Skill, const FString&, ErrorLog);
 
 UCLASS(Blueprintable)
@@ -19,8 +19,7 @@ class SKILLSYSTEM_API USkillComponent : public UActorComponent
     GENERATED_BODY()
 
 public:
-    UPROPERTY(BlueprintAssignable)
-    FSkillCastDelegate SkillCastDelegate;
+    FOnSkillStateChanged OnSkillActivated;
 
     UPROPERTY(BlueprintAssignable)
     FOnSkillValidationError OnSkillPreCastValidationError;
@@ -100,7 +99,7 @@ public:
     virtual void KeepCastingSkill(USkill* Skill);
 
     //UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    //virtual void InterruptCastingSkill()
+    //virtual void InterruptSkillMidCast();
     
     UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
     virtual void ActivateSkill(USkill* Skill);

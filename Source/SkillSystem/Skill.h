@@ -110,8 +110,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
 	virtual void RequestOwnerToExecute();
-
-	void RequestOwnerToMaintainCast();
+	virtual void RequestOwnerToMaintainCast();
+	virtual void RequestOwnerToActivate();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
 	bool CanSkillBeCast(FString& ErrorLog) const;
@@ -133,8 +133,6 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void Tick(const float DeltaSeconds);
-
-	void TickTimers(const float DeltaSeconds);
 	
 	UFUNCTION(BlueprintPure, Category = "Debug")
 	FString GetClassName() const { return GetClass()->GetName(); }

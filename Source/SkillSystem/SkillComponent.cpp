@@ -7,6 +7,7 @@
 
 USkillComponent::USkillComponent()
 {
+	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
 	bReplicateUsingRegisteredSubObjectList = true;
 }
@@ -213,9 +214,6 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 
 	for (USkill* Skill : OwnedSkills)
 	{
-		bool bValidated;
-		FString ErrorLog;
-		ValidateSkillMidCast(Skill, bValidated, ErrorLog);
 		Skill->Tick(DeltaTime);
 	}
 	

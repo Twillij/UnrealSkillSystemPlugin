@@ -9,6 +9,28 @@ void UOnlineSkill::RequestOwnerToExecute()
 	}
 }
 
+void UOnlineSkill::RequestOwnerToMaintainCast()
+{
+	if (UOnlineSkillComponent* Owner = GetOwningOnlineComponent())
+	{
+		if (Owner->IsServer())
+		{
+			Owner->KeepCastingSkill(this);
+		}
+	}
+}
+
+void UOnlineSkill::RequestOwnerToActivate()
+{
+	if (UOnlineSkillComponent* Owner = GetOwningOnlineComponent())
+	{
+		if (Owner->IsServer())
+		{
+			Owner->ActivateSkill(this);
+		}
+	}
+}
+
 UOnlineSkillComponent* UOnlineSkill::GetOwningOnlineComponent() const
 {
 	return Cast<UOnlineSkillComponent>(GetOwningComponent());
@@ -26,7 +48,3 @@ bool UOnlineSkill::IsClient() const
 	return Owner ? Owner->IsClient() : false;
 }
 
-void UOnlineSkill::Tick_Implementation(const float DeltaSeconds)
-{
-	
-}

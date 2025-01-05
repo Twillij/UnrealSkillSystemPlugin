@@ -51,6 +51,14 @@ void USkill::RequestOwnerToMaintainCast()
 	}
 }
 
+void USkill::RequestOwnerToActivate()
+{
+	if (USkillComponent* Owner = GetOwningComponent())
+	{
+		Owner->ActivateSkill(this);
+	}
+}
+
 bool USkill::CanSkillBeCast_Implementation(FString& ErrorLog) const
 {
 	const bool bSuccess = bUnlocked;
@@ -87,11 +95,6 @@ void USkill::DeactivateSkill_Implementation()
 
 void USkill::Tick_Implementation(const float DeltaSeconds)
 {
-	TickTimers(DeltaSeconds);
-}
-
-void USkill::TickTimers(const float DeltaSeconds)
-{
 	if (CastTimer > 0)
 	{
 		RequestOwnerToMaintainCast();
@@ -99,7 +102,7 @@ void USkill::TickTimers(const float DeltaSeconds)
 		
 		if (CastTimer <= 0)
 		{
-			
+			RequestOwnerToActivate();
 		}
 	}
 	else if (DurationTimer > 0)

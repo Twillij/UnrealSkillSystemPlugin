@@ -24,7 +24,6 @@ void UOnlineSkillComponent::KeepCastingSkill(USkill* Skill)
 	if (!bValidated)
 	{
 		ClientReceiveSkillMidCastValidationError(OnlineSkill, ErrorLog);
-		MulticastInterruptSkillCast(OnlineSkill);
 	}
 }
 

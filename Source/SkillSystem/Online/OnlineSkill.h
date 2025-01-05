@@ -12,6 +12,8 @@ class SKILLSYSTEM_API UOnlineSkill : public USkill
 
 public:
 	virtual void RequestOwnerToExecute() override;
+	virtual void RequestOwnerToMaintainCast() override;
+	virtual void RequestOwnerToActivate() override;
 
 	UFUNCTION(BlueprintPure)
 	UOnlineSkillComponent* GetOwningOnlineComponent() const;
@@ -21,7 +23,4 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	bool IsClient() const;
-	
-protected:
-	virtual void Tick_Implementation(const float DeltaSeconds) override;
 };
