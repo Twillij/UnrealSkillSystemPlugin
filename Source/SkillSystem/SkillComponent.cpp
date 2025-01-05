@@ -76,53 +76,48 @@ void USkillComponent::ExecuteSkill(USkill* Skill)
 
 	if (Skill->CastTime > 0)
 	{
-		TryCastSkill(Skill);
+		CastSkill(Skill);
 	}
 	else // CastTime <= 0
 	{
-		TryActivateSkill(Skill);
+		ActivateSkill(Skill);
 	}
 }
 
-bool USkillComponent::TryCastSkill(USkill* Skill)
+void USkillComponent::CastSkill(USkill* Skill)
 {
+	bool bValidated;
 	FString ErrorLog;
-	const bool bValidated = ValidateSkillPreCast(Skill, ErrorLog);
-	//Skill->TryCastSkill();
+	ValidateSkillPreCast(Skill, bValidated, ErrorLog);
 	
 	if (bValidated)
-	{
-		//StartCastingSkill();
-	}
-	return bValidated;
+		Skill->CastSkill();
+	else
+		OnSkillPreCastValidationError.Broadcast(Skill, ErrorLog);
 }
 
-bool USkillComponent::TryActivateSkill(USkill* Skill)
+void USkillComponent::KeepCastingSkill(USkill* Skill)
+{
+	bool bValidated;
+	FString ErrorLog;
+	ValidateSkillMidCast(Skill, bValidated, ErrorLog);
+	
+	if (!bValidated)
+	{
+		OnSkillMidCastValidationError.Broadcast(Skill, ErrorLog);
+	}
+}
+
+void USkillComponent::ActivateSkill(USkill* Skill)
 {
 	bool bValidated;
 	FString ErrorLog;
 	ValidateSkillPreActivation(Skill, bValidated, ErrorLog);
 	
 	if (bValidated)
-	{
-		Skill->StartActivation();
-	}
+		Skill->ActivateSkill();
 	else
-	{
 		OnSkillPreActivationValidationError.Broadcast(Skill, ErrorLog);
-	}
-	
-	return bValidated;
-}
-
-bool USkillComponent::CanSkillBeCast(USkill* Skill, FString& ErrorLog) const
-{
-	return HasSkill(Skill) && Skill->CanSkillBeCast(ErrorLog);
-}
-
-bool USkillComponent::CanSkillBeActivated(USkill* Skill, FString& ErrorLog) const
-{
-	return HasSkill(Skill) && Skill->CanSkillBeActivated(ErrorLog);
 }
 
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
@@ -218,6 +213,9 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 
 	for (USkill* Skill : OwnedSkills)
 	{
+		bool bValidated;
+		FString ErrorLog;
+		ValidateSkillMidCast(Skill, bValidated, ErrorLog);
 		Skill->Tick(DeltaTime);
 	}
 	
@@ -227,16 +225,17 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 	}
 }
 
-bool USkillComponent::ValidateSkillPreCast(USkill* Skill, FString& ErrorLog) const
+void USkillComponent::ValidateSkillPreCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const
 {
-	if (HasSkill(Skill))
-	{
-		return Skill->CanSkillBeCast(ErrorLog);
-	}
-	return false;
+	bValidated = HasSkill(Skill) && CanSkillBeCast(Skill, ErrorLog) && Skill->CanSkillBeCast(ErrorLog);
+}
+
+void USkillComponent::ValidateSkillMidCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const
+{
+	bValidated = HasSkill(Skill) && CanSkillBeCast(Skill, ErrorLog) && Skill->CanSkillBeCast(ErrorLog);
 }
 
 void USkillComponent::ValidateSkillPreActivation(USkill* Skill, bool& bValidated, FString& ErrorLog) const
 {
-	bValidated = Skill && CanSkillBeActivated(Skill, ErrorLog);
+	bValidated = HasSkill(Skill) && CanSkillBeActivated(Skill, ErrorLog) && Skill->CanSkillBeActivated(ErrorLog);
 }

@@ -108,48 +108,33 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void UpdateSkillData(const FSkillData& SkillData);
 
-	// player presses skill button (client)
-	// select target if applicable (client)
-	// try cast skill
-	// validate skill pre-cast (check mana, is target in range, etc) (server)
-	// if validated, start casting (start timer, casting anim, etc) (server+client)
-	// continuously validate skill mid-cast (server)
-	// if validation fails mid-cast, stop casting (stop timer, anim, etc) (server+client)
-	// when cast finishes without failing, try activate skill
-	// validate skill pre activation (check mana, is target in range, etc) (server)
-	// if validated, activate skill + start duration (server+client)
-	// when duration is over or manually cancelled, deactivate skill (server+client)
-	// upon deactivation, start cooldown (server)
-
-	UFUNCTION(BlueprintCallable, Category = "Skill")
+	UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
 	virtual void RequestOwnerToExecute();
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	void TryCastSkill();
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	void StartActivation();
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	void DeactivateSkill();
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	void StartCastingSkill();
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
-	void StopCastingSkill();
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool CanSkillBeCast(FString& ErrorLog);
+	void RequestOwnerToMaintainCast();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
+	bool CanSkillBeCast(FString& ErrorLog) const;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
+	bool CanSkillBeActivated(FString& ErrorLog) const;
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool ValidateSkillMidCast(FString& ErrorLog);
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+	void CastSkill();
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+	void StopCastingSkill();
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	bool CanSkillBeActivated(FString& ErrorLog);
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+	void ActivateSkill();
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+	void DeactivateSkill();
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void Tick(const float DeltaSeconds);
+
+	void TickTimers(const float DeltaSeconds);
 	
 	UFUNCTION(BlueprintPure, Category = "Debug")
 	FString GetClassName() const { return GetClass()->GetName(); }
@@ -161,18 +146,8 @@ protected:
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitProperties() override;
-
+	
 	UFUNCTION(BlueprintNativeEvent, Category = "Object")
 	void BeginPlay();
-
-	
-	
-	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
-	void OnReceivePreCastValidation(const bool bSuccess, const FString& ErrorLog);
-	
-	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
-	void OnReceiveMidCastValidation(const bool bSuccess, const FString& ErrorLog);
-
-	UFUNCTION(BlueprintImplementableEvent, Category = "Skill|Network")
-	void OnReceivePreActivationValidation(const bool bSuccess, const FString& ErrorLog);
+	void BeginPlay_Implementation() {}
 };

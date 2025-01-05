@@ -1,19 +1,44 @@
 #include "OnlineSkillComponent.h"
 #include "OnlineSkill.h"
 
-bool UOnlineSkillComponent::TryActivateSkill(USkill* Skill)
+void UOnlineSkillComponent::CastSkill(USkill* Skill)
 {
 	UOnlineSkill* OnlineSkill = Cast<UOnlineSkill>(Skill);
 	bool bValidated;
-	FString Results;
-	ValidateSkillPreActivation(OnlineSkill, bValidated, Results);
+	FString ErrorLog;
+	ValidateSkillPreCast(OnlineSkill, bValidated, ErrorLog);
 
 	if (bValidated)
-		MulticastStartSkillActivation(OnlineSkill);
+		MulticastCastSkill(OnlineSkill);
 	else
-		ClientReceiveSkillPreActivationValidationError(OnlineSkill, Results);
+		ClientReceiveSkillPreCastValidationError(OnlineSkill, ErrorLog);
+}
+
+void UOnlineSkillComponent::KeepCastingSkill(USkill* Skill)
+{
+	UOnlineSkill* OnlineSkill = Cast<UOnlineSkill>(Skill);
+	bool bValidated;
+	FString ErrorLog;
+	ValidateSkillMidCast(Skill, bValidated, ErrorLog);
 	
-	return bValidated;
+	if (!bValidated)
+	{
+		ClientReceiveSkillMidCastValidationError(OnlineSkill, ErrorLog);
+		MulticastInterruptSkillCast(OnlineSkill);
+	}
+}
+
+void UOnlineSkillComponent::ActivateSkill(USkill* Skill)
+{
+	UOnlineSkill* OnlineSkill = Cast<UOnlineSkill>(Skill);
+	bool bValidated;
+	FString ErrorLog;
+	ValidateSkillPreActivation(OnlineSkill, bValidated, ErrorLog);
+
+	if (bValidated)
+		MulticastActivateSkill(OnlineSkill);
+	else
+		ClientReceiveSkillPreActivationValidationError(OnlineSkill, ErrorLog);
 }
 
 void UOnlineSkillComponent::ServerExecuteSkill_Implementation(UOnlineSkill* Skill)
@@ -21,22 +46,32 @@ void UOnlineSkillComponent::ServerExecuteSkill_Implementation(UOnlineSkill* Skil
 	ExecuteSkill(Skill);
 }
 
+void UOnlineSkillComponent::MulticastCastSkill_Implementation(UOnlineSkill* Skill)
+{
+	Skill->CastSkill();
+}
+
+void UOnlineSkillComponent::MulticastInterruptSkillCast_Implementation(UOnlineSkill* Skill)
+{
+	Skill->StopCastingSkill();
+}
+
+void UOnlineSkillComponent::MulticastActivateSkill_Implementation(UOnlineSkill* Skill)
+{
+	Skill->ActivateSkill();
+}
+
+void UOnlineSkillComponent::ClientReceiveSkillPreCastValidationError_Implementation(UOnlineSkill* Skill, const FString& ErrorLog)
+{
+	OnSkillPreCastValidationError.Broadcast(Skill, ErrorLog);
+}
+
+void UOnlineSkillComponent::ClientReceiveSkillMidCastValidationError_Implementation(UOnlineSkill* Skill, const FString& ErrorLog)
+{
+	OnSkillMidCastValidationError.Broadcast(Skill, ErrorLog);
+}
+
 void UOnlineSkillComponent::ClientReceiveSkillPreActivationValidationError_Implementation(UOnlineSkill* Skill, const FString& ErrorLog)
 {
 	OnSkillPreActivationValidationError.Broadcast(Skill, ErrorLog);
-}
-
-void UOnlineSkillComponent::MulticastStartSkillActivation_Implementation(UOnlineSkill* Skill)
-{
-	// Execute server logic
-	if (IsServer())
-	{
-		
-	}
-
-	// Execute client logic
-	if (IsClient())
-	{
-		
-	}
 }

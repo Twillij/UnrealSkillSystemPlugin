@@ -23,6 +23,12 @@ public:
     FSkillCastDelegate SkillCastDelegate;
 
     UPROPERTY(BlueprintAssignable)
+    FOnSkillValidationError OnSkillPreCastValidationError;
+    
+    UPROPERTY(BlueprintAssignable)
+    FOnSkillValidationError OnSkillMidCastValidationError;
+    
+    UPROPERTY(BlueprintAssignable)
     FOnSkillValidationError OnSkillPreActivationValidationError;
     
     // Intended to be modified on the client only, e.g. to load skills from the client's save file.
@@ -88,14 +94,24 @@ public:
     void ExecuteSkill(USkill* Skill);
     
     UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    bool TryCastSkill(USkill* Skill);
+    virtual void CastSkill(USkill* Skill);
 
     UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    virtual bool TryActivateSkill(USkill* Skill);
+    virtual void KeepCastingSkill(USkill* Skill);
 
+    //UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
+    //virtual void InterruptCastingSkill()
+    
+    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
+    virtual void ActivateSkill(USkill* Skill);
+
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure)
     bool CanSkillBeCast(USkill* Skill, FString& ErrorLog) const;
-
+    bool CanSkillBeCast_Implementation(USkill* Skill, FString& ErrorLog) const { return true; }
+    
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure)
     bool CanSkillBeActivated(USkill* Skill, FString& ErrorLog) const;
+    bool CanSkillBeActivated_Implementation(USkill* Skill, FString& ErrorLog) const { return true; }
     
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
@@ -135,7 +151,7 @@ protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void TickComponent(const float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
     
-    bool ValidateSkillPreCast(USkill* Skill, FString& ErrorLog) const;
-
+    void ValidateSkillPreCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
+    void ValidateSkillMidCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
     void ValidateSkillPreActivation(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
 };

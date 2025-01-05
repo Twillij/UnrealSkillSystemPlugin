@@ -43,29 +43,29 @@ void USkill::RequestOwnerToExecute()
 	}
 }
 
-void USkill::TryCastSkill_Implementation()
+void USkill::RequestOwnerToMaintainCast()
 {
-	FString ErrorLog;
-	const bool bValidated = CanSkillBeCast(ErrorLog);
-	OnReceivePreCastValidation(bValidated, ErrorLog);
-	
-	if (bValidated)
+	if (USkillComponent* Owner = GetOwningComponent())
 	{
-		StartCastingSkill();
+		Owner->KeepCastingSkill(this);
 	}
 }
 
-void USkill::StartActivation_Implementation()
+bool USkill::CanSkillBeCast_Implementation(FString& ErrorLog) const
 {
-	DurationTimer = Duration;
+	const bool bSuccess = bUnlocked;
+	if (!bUnlocked) ErrorLog.Append("LOCKED;");
+	return bSuccess;
 }
 
-void USkill::DeactivateSkill_Implementation()
+bool USkill::CanSkillBeActivated_Implementation(FString& ErrorLog) const
 {
-	CooldownTimer = Cooldown;
+	const bool bSuccess = bUnlocked;
+	if (!bUnlocked) ErrorLog.Append("LOCKED;");
+	return bSuccess;
 }
 
-void USkill::StartCastingSkill_Implementation()
+void USkill::CastSkill_Implementation()
 {
 	CastTimer = CastTime;
 }
@@ -75,22 +75,29 @@ void USkill::StopCastingSkill_Implementation()
 	CastTimer = 0;
 }
 
+void USkill::ActivateSkill_Implementation()
+{
+	DurationTimer = Duration;
+}
+
+void USkill::DeactivateSkill_Implementation()
+{
+	CooldownTimer = Cooldown;
+}
+
 void USkill::Tick_Implementation(const float DeltaSeconds)
+{
+	TickTimers(DeltaSeconds);
+}
+
+void USkill::TickTimers(const float DeltaSeconds)
 {
 	if (CastTimer > 0)
 	{
+		RequestOwnerToMaintainCast();
 		CastTimer -= DeltaSeconds;
 		
-		if (CastTimer > 0)
-		{
-			FString ErrorLog;
-			if (!ValidateSkillMidCast(ErrorLog))
-			{
-				OnReceiveMidCastValidation(false, ErrorLog);
-				StopCastingSkill();
-			}
-		}
-		else // CastTimer <= 0
+		if (CastTimer <= 0)
 		{
 			
 		}
@@ -122,33 +129,10 @@ void USkill::PostInitProperties()
 	
 	if (GetWorld() && GetWorld()->IsGameWorld())
 	{
+		if (!GetOwningComponent())
+		{
+			UE_LOG(LogSkill, Error, TEXT("%s has an invalid skill outer. Outer is expected to be its owning skill component."), *GetName())
+		}
 		BeginPlay();
 	}
-}
-
-void USkill::BeginPlay_Implementation()
-{
-	if (!GetOwningComponent())
-	{
-		UE_LOG(LogSkill, Error, TEXT("%s has an invalid skill outer. Outer is expected to be its owning skill component."), *GetName())
-	}
-}
-
-bool USkill::CanSkillBeCast_Implementation(FString& ErrorLog)
-{
-	const bool bSuccess = bUnlocked;
-	if (!bUnlocked) ErrorLog.Append("LOCKED;");
-	return bSuccess;
-}
-
-bool USkill::ValidateSkillMidCast_Implementation(FString& ErrorLog)
-{
-	return true;
-}
-
-bool USkill::CanSkillBeActivated_Implementation(FString& ErrorLog)
-{
-	const bool bSuccess = bUnlocked;
-	if (!bUnlocked) ErrorLog.Append("LOCKED;");
-	return bSuccess;
 }

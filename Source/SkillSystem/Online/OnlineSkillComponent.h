@@ -11,7 +11,9 @@ class SKILLSYSTEM_API UOnlineSkillComponent : public USkillComponent
 	GENERATED_BODY()
 
 public:
-	virtual bool TryActivateSkill(USkill* Skill) override;
+	virtual void CastSkill(USkill* Skill) override;
+	virtual void KeepCastingSkill(USkill* Skill) override;
+	virtual void ActivateSkill(USkill* Skill) override;
 
 	UFUNCTION(BlueprintPure)
 	bool IsServer() const { return GetNetMode() <= NM_ListenServer; }
@@ -23,9 +25,22 @@ public:
 	void ServerExecuteSkill(UOnlineSkill* Skill);
 
 protected:
-	UFUNCTION(Client, Reliable, Category = "Skill|Network")
-	void ClientReceiveSkillPreActivationValidationError(UOnlineSkill* Skill, const FString& ErrorLog);
+	UFUNCTION(NetMulticast, Reliable, Category = "Skill|Network")
+	void MulticastCastSkill(UOnlineSkill* Skill);
+
+	UFUNCTION(NetMulticast, Reliable, Category = "Skill|Network")
+	void MulticastInterruptSkillCast(UOnlineSkill* Skill);
 	
 	UFUNCTION(NetMulticast, Reliable, Category = "Skill|Network")
-	void MulticastStartSkillActivation(UOnlineSkill* Skill);
+	void MulticastActivateSkill(UOnlineSkill* Skill);
+	
+	UFUNCTION(Client, Reliable, Category = "Skill|Network")
+	void ClientReceiveSkillPreCastValidationError(UOnlineSkill* Skill, const FString& ErrorLog);
+
+	UFUNCTION(Client, Reliable, Category = "Skill|Network")
+	void ClientReceiveSkillMidCastValidationError(UOnlineSkill* Skill, const FString& ErrorLog);
+	
+	UFUNCTION(Client, Reliable, Category = "Skill|Network")
+	void ClientReceiveSkillPreActivationValidationError(UOnlineSkill* Skill, const FString& ErrorLog);
 };
+
