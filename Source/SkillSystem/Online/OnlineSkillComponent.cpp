@@ -1,7 +1,7 @@
 #include "OnlineSkillComponent.h"
 #include "OnlineSkill.h"
 
-void UOnlineSkillComponent::CastSkill(USkill* Skill)
+void UOnlineSkillComponent::TryCastSkill(USkill* Skill)
 {
 	UOnlineSkill* OnlineSkill = Cast<UOnlineSkill>(Skill);
 	bool bValidated;
@@ -14,20 +14,21 @@ void UOnlineSkillComponent::CastSkill(USkill* Skill)
 		ClientReceiveSkillPreCastValidationError(OnlineSkill, ErrorLog);
 }
 
-void UOnlineSkillComponent::KeepCastingSkill(USkill* Skill)
+void UOnlineSkillComponent::TryMaintainSkillCast(USkill* Skill)
 {
 	UOnlineSkill* OnlineSkill = Cast<UOnlineSkill>(Skill);
 	bool bValidated;
 	FString ErrorLog;
-	ValidateSkillMidCast(Skill, bValidated, ErrorLog);
+	ValidateSkillMidCast(OnlineSkill, bValidated, ErrorLog);
 	
 	if (!bValidated)
 	{
 		ClientReceiveSkillMidCastValidationError(OnlineSkill, ErrorLog);
+		MulticastCancelSkillCast(OnlineSkill);
 	}
 }
 
-void UOnlineSkillComponent::ActivateSkill(USkill* Skill)
+void UOnlineSkillComponent::TryActivateSkill(USkill* Skill)
 {
 	UOnlineSkill* OnlineSkill = Cast<UOnlineSkill>(Skill);
 	bool bValidated;
@@ -47,16 +48,19 @@ void UOnlineSkillComponent::ServerExecuteSkill_Implementation(UOnlineSkill* Skil
 
 void UOnlineSkillComponent::MulticastCastSkill_Implementation(UOnlineSkill* Skill)
 {
+	CastSkill(Skill);
 	Skill->CastSkill();
 }
 
-void UOnlineSkillComponent::MulticastInterruptSkillCast_Implementation(UOnlineSkill* Skill)
+void UOnlineSkillComponent::MulticastCancelSkillCast_Implementation(UOnlineSkill* Skill)
 {
-	Skill->StopCastingSkill();
+	CancelSkillCast(Skill);
+	Skill->CancelSkillCast();
 }
 
 void UOnlineSkillComponent::MulticastActivateSkill_Implementation(UOnlineSkill* Skill)
 {
+	ActivateSkill(Skill);
 	Skill->ActivateSkill();
 }
 

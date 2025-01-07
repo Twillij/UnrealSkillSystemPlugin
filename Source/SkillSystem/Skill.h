@@ -123,7 +123,7 @@ public:
 	void CastSkill();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
-	void StopCastingSkill();
+	void CancelSkillCast();
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
 	void ActivateSkill();

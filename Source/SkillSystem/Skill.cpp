@@ -47,7 +47,7 @@ void USkill::RequestOwnerToMaintainCast()
 {
 	if (USkillComponent* Owner = GetOwningComponent())
 	{
-		Owner->KeepCastingSkill(this);
+		Owner->TryMaintainSkillCast(this);
 	}
 }
 
@@ -55,7 +55,7 @@ void USkill::RequestOwnerToActivate()
 {
 	if (USkillComponent* Owner = GetOwningComponent())
 	{
-		Owner->ActivateSkill(this);
+		Owner->TryActivateSkill(this);
 	}
 }
 
@@ -78,7 +78,7 @@ void USkill::CastSkill_Implementation()
 	CastTimer = CastTime;
 }
 
-void USkill::StopCastingSkill_Implementation()
+void USkill::CancelSkillCast_Implementation()
 {
 	CastTimer = 0;
 }

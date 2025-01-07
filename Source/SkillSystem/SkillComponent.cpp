@@ -77,27 +77,32 @@ void USkillComponent::ExecuteSkill(USkill* Skill)
 
 	if (Skill->CastTime > 0)
 	{
-		CastSkill(Skill);
+		TryCastSkill(Skill);
 	}
 	else // CastTime <= 0
 	{
-		ActivateSkill(Skill);
+		TryActivateSkill(Skill);
 	}
 }
 
-void USkillComponent::CastSkill(USkill* Skill)
+void USkillComponent::TryCastSkill(USkill* Skill)
 {
 	bool bValidated;
 	FString ErrorLog;
 	ValidateSkillPreCast(Skill, bValidated, ErrorLog);
 	
 	if (bValidated)
+	{
+		CastSkill(Skill);
 		Skill->CastSkill();
+	}
 	else
+	{
 		OnSkillPreCastValidationError.Broadcast(Skill, ErrorLog);
+	}
 }
 
-void USkillComponent::KeepCastingSkill(USkill* Skill)
+void USkillComponent::TryMaintainSkillCast(USkill* Skill)
 {
 	bool bValidated;
 	FString ErrorLog;
@@ -106,19 +111,26 @@ void USkillComponent::KeepCastingSkill(USkill* Skill)
 	if (!bValidated)
 	{
 		OnSkillMidCastValidationError.Broadcast(Skill, ErrorLog);
+		CancelSkillCast(Skill);
+		Skill->CancelSkillCast();
 	}
 }
 
-void USkillComponent::ActivateSkill(USkill* Skill)
+void USkillComponent::TryActivateSkill(USkill* Skill)
 {
 	bool bValidated;
 	FString ErrorLog;
 	ValidateSkillPreActivation(Skill, bValidated, ErrorLog);
 	
 	if (bValidated)
+	{
+		ActivateSkill(Skill);
 		Skill->ActivateSkill();
+	}
 	else
+	{
 		OnSkillPreActivationValidationError.Broadcast(Skill, ErrorLog);
+	}
 }
 
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)

@@ -89,28 +89,53 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void ProcessSkillData(const FSkillData& InData);
 
+    // Starts the execution of a skill and tries to go through each of the implemented execution phases.
+    // If the cast time for the skill is set to 0, then it will skip the casting phase and go immediately to activation.
     UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
     void ExecuteSkill(USkill* Skill);
-    
-    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    virtual void CastSkill(USkill* Skill);
 
+    // Attempts to validate a skill before casting it.
+    // If the validation fails, it will broadcast the corresponding validation error delegate.
     UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    virtual void KeepCastingSkill(USkill* Skill);
+    virtual void TryCastSkill(USkill* Skill);
 
-    //UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    //virtual void InterruptSkillMidCast();
-    
+    // Attempts to validate a skill that is mid-cast every frame.
+    // If the validation fails, it will cancel the cast and broadcast the corresponding validation error delegate.
     UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    virtual void ActivateSkill(USkill* Skill);
+    virtual void TryMaintainSkillCast(USkill* Skill);
 
-    UFUNCTION(BlueprintNativeEvent, BlueprintPure)
+    // Attempts to validate a skill before activating it.
+    // If the validation fails, it will broadcast the corresponding validation error delegate.
+    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
+    virtual void TryActivateSkill(USkill* Skill);
+
+    // A custom implementation for validating a skill before it can be cast.
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
     bool CanSkillBeCast(USkill* Skill, FString& ErrorLog) const;
     bool CanSkillBeCast_Implementation(USkill* Skill, FString& ErrorLog) const { return true; }
-    
-    UFUNCTION(BlueprintNativeEvent, BlueprintPure)
+
+    // A custom implementation for validating a skill before it can be activated.
+    UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
     bool CanSkillBeActivated(USkill* Skill, FString& ErrorLog) const;
     bool CanSkillBeActivated_Implementation(USkill* Skill, FString& ErrorLog) const { return true; }
+
+    // A custom implementation for casting any skill, called after the skill is successfully validated.
+    // This will be called on both the server and all connected clients when using the online component.
+    UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+    void CastSkill(USkill* Skill);
+    void CastSkill_Implementation(USkill* Skill) {}
+
+    // A custom implementation for cancelling any skill, called after the skill fails its mid-cast validation.
+    // This will be called on both the server and all connected clients when using the online component.
+    UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+    void CancelSkillCast(USkill* Skill);
+    void CancelSkillCast_Implementation(USkill* Skill) {}
+
+    // A custom implementation for activating any skill, called after the skill is successfully validated.
+    // This will be called on both the server and all connected clients when using the online component.
+    UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+    void ActivateSkill(USkill* Skill);
+    void ActivateSkill_Implementation(USkill* Skill) {}
     
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")

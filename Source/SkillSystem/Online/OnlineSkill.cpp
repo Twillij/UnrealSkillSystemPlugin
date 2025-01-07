@@ -15,7 +15,7 @@ void UOnlineSkill::RequestOwnerToMaintainCast()
 	{
 		if (Owner->IsServer())
 		{
-			Owner->KeepCastingSkill(this);
+			Owner->TryMaintainSkillCast(this);
 		}
 	}
 }
@@ -26,7 +26,7 @@ void UOnlineSkill::RequestOwnerToActivate()
 	{
 		if (Owner->IsServer())
 		{
-			Owner->ActivateSkill(this);
+			Owner->TryActivateSkill(this);
 		}
 	}
 }
