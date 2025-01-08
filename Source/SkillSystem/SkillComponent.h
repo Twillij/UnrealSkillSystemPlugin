@@ -109,12 +109,12 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
     virtual void TryActivateSkill(USkill* Skill);
 
-    // A custom implementation for validating a skill before it can be cast.
+    // A custom implementation for validating a skill before it can be cast
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
     bool CanSkillBeCast(USkill* Skill, FString& ErrorLog) const;
     bool CanSkillBeCast_Implementation(USkill* Skill, FString& ErrorLog) const { return true; }
 
-    // A custom implementation for validating a skill before it can be activated.
+    // A custom implementation for validating a skill before it can be activated
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
     bool CanSkillBeActivated(USkill* Skill, FString& ErrorLog) const;
     bool CanSkillBeActivated_Implementation(USkill* Skill, FString& ErrorLog) const { return true; }
@@ -141,9 +141,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
     void ApplySkillEffect(USkillEffect* Effect);
 
+    // Binds a skill execution to an input action.
     UFUNCTION(BlueprintCallable, Category = "Skill|Input")
     bool BindSkillToInput(const TSubclassOf<USkill> SkillClass, const FName InputActionName, const EInputEvent InputEvent);
 
+    // Binds a skill execution to an input action.
     UFUNCTION(BlueprintCallable, Category = "Skill|Input")
     bool BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillClass, const UInputAction* InputAction, const ETriggerEvent TriggerEvent);
     

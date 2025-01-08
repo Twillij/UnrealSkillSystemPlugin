@@ -102,37 +102,54 @@ public:
 	UFUNCTION(BlueprintPure)
 	USkillComponent* GetOwningComponent() const;
 
-	UFUNCTION(BlueprintPure)
-	bool HasAuthority() const;
-	
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Tick")
+	void BlueprintTick(const float DeltaSeconds);
+	virtual void NativeTick(const float DeltaSeconds);
+
+	// Updates the skill with the new data
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void UpdateSkillData(const FSkillData& SkillData);
 
+	// Requests the owning component to execute this skill
 	UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
 	virtual void RequestOwnerToExecute();
+
+	// Requests the owning component to maintain the casting of this skill
+	UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
 	virtual void RequestOwnerToMaintainCast();
+
+	// Requests the owning component to activate this skill
+	UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
 	virtual void RequestOwnerToActivate();
 
+	// A custom implementation for validating a skill before it can be cast
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
 	bool CanSkillBeCast(FString& ErrorLog) const;
 
+	// A custom implementation for validating a skill before it can be activated
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
 	bool CanSkillBeActivated(FString& ErrorLog) const;
-	
+
+	// Handles the casting of this skill, called after the skill is successfully validated.
+	// This will be called on both the server and all connected clients when using the online component.
+	// Intended for custom implementation, with a default implementation that handles the cast timer.
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
 	void CastSkill();
 
+	// Handles the cancellation of this skill's casting, called after the skill fails its mid-cast validation.
+	// This will be called on both the server and all connected clients when using the online component.
+	// Intended for custom implementation, with a default implementation that handles the cast timer.
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
 	void CancelSkillCast();
-	
+
+	// Handles the activation of this skill, called after the skill is successfully validated.
+	// This will be called on both the server and all connected clients when using the online component.
+	// Intended for custom implementation, with a default implementation that handles the duration timer.
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
 	void ActivateSkill();
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
 	void DeactivateSkill();
-	
-	UFUNCTION(BlueprintNativeEvent)
-	void Tick(const float DeltaSeconds);
 	
 	UFUNCTION(BlueprintPure, Category = "Debug")
 	FString GetClassName() const { return GetClass()->GetName(); }
@@ -145,7 +162,7 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitProperties() override;
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "Object")
-	void BeginPlay();
-	void BeginPlay_Implementation() {}
+	UFUNCTION(BlueprintImplementableEvent, DisplayName = "BeginPlay")
+	void BlueprintBeginPlay();
+	void NativeBeginPlay() { BlueprintBeginPlay(); }
 };

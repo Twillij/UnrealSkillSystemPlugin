@@ -36,6 +36,12 @@ UOnlineSkillComponent* UOnlineSkill::GetOwningOnlineComponent() const
 	return Cast<UOnlineSkillComponent>(GetOwningComponent());
 }
 
+bool UOnlineSkill::HasAuthority() const
+{
+	const USkillComponent* OwningComponent = GetOwningComponent();
+	return OwningComponent ? OwningComponent->HasAuthority() : false;
+}
+
 bool UOnlineSkill::IsServer() const
 {
 	const UOnlineSkillComponent* Owner = GetOwningOnlineComponent();
@@ -47,4 +53,3 @@ bool UOnlineSkill::IsClient() const
 	const UOnlineSkillComponent* Owner = GetOwningOnlineComponent();
 	return Owner ? Owner->IsClient() : false;
 }
-

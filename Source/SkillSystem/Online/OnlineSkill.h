@@ -17,6 +17,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	UOnlineSkillComponent* GetOwningOnlineComponent() const;
+
+	UFUNCTION(BlueprintPure)
+	bool HasAuthority() const;
 	
 	UFUNCTION(BlueprintPure)
 	bool IsServer() const;

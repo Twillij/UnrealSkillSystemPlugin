@@ -29,10 +29,28 @@ USkillComponent* USkill::GetOwningComponent() const
 	return Cast<USkillComponent>(GetOuter());
 }
 
-bool USkill::HasAuthority() const
+void USkill::NativeTick(const float DeltaSeconds)
 {
-	const USkillComponent* OwningComponent = GetOwningComponent();
-	return OwningComponent ? OwningComponent->HasAuthority() : false;
+	if (CastTimer > 0)
+	{
+		RequestOwnerToMaintainCast();
+		CastTimer -= DeltaSeconds;
+		
+		if (CastTimer <= 0)
+		{
+			RequestOwnerToActivate();
+		}
+	}
+	else if (DurationTimer > 0)
+	{
+		DurationTimer -= DeltaSeconds;
+		if (DurationTimer <= 0) DeactivateSkill();
+	}
+	else if (CooldownTimer > 0)
+	{
+		CooldownTimer -= DeltaSeconds;
+	}
+	BlueprintTick(DeltaSeconds);
 }
 
 void USkill::RequestOwnerToExecute()
@@ -93,29 +111,6 @@ void USkill::DeactivateSkill_Implementation()
 	CooldownTimer = Cooldown;
 }
 
-void USkill::Tick_Implementation(const float DeltaSeconds)
-{
-	if (CastTimer > 0)
-	{
-		RequestOwnerToMaintainCast();
-		CastTimer -= DeltaSeconds;
-		
-		if (CastTimer <= 0)
-		{
-			RequestOwnerToActivate();
-		}
-	}
-	else if (DurationTimer > 0)
-	{
-		DurationTimer -= DeltaSeconds;
-		if (DurationTimer <= 0) DeactivateSkill();
-	}
-	else if (CooldownTimer > 0)
-	{
-		CooldownTimer -= DeltaSeconds;
-	}
-}
-
 void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -136,6 +131,6 @@ void USkill::PostInitProperties()
 		{
 			UE_LOG(LogSkill, Error, TEXT("%s has an invalid skill outer. Outer is expected to be its owning skill component."), *GetName())
 		}
-		BeginPlay();
+		NativeBeginPlay();
 	}
 }

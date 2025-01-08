@@ -226,7 +226,7 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 
 	for (USkill* Skill : OwnedSkills)
 	{
-		Skill->Tick(DeltaTime);
+		Skill->NativeTick(DeltaTime);
 	}
 	
 	for (USkillEffect* Effect : AppliedEffects)
