@@ -90,16 +90,11 @@ void USkillComponent::TryCastSkill(USkill* Skill)
 	bool bValidated;
 	FString ErrorLog;
 	ValidateSkillPreCast(Skill, bValidated, ErrorLog);
-	
+
 	if (bValidated)
-	{
-		CastSkill(Skill);
-		Skill->CastSkill();
-	}
+		MulticastCastSkill(Skill);
 	else
-	{
-		OnSkillPreCastValidationError.Broadcast(Skill, ErrorLog);
-	}
+		ClientReceiveSkillPreCastValidationError(Skill, ErrorLog);
 }
 
 void USkillComponent::TryMaintainSkillCast(USkill* Skill)
@@ -110,9 +105,8 @@ void USkillComponent::TryMaintainSkillCast(USkill* Skill)
 	
 	if (!bValidated)
 	{
-		OnSkillMidCastValidationError.Broadcast(Skill, ErrorLog);
-		CancelSkillCast(Skill);
-		Skill->CancelSkillCast();
+		ClientReceiveSkillMidCastValidationError(Skill, ErrorLog);
+		MulticastCancelSkillCast(Skill);
 	}
 }
 
@@ -121,16 +115,11 @@ void USkillComponent::TryActivateSkill(USkill* Skill)
 	bool bValidated;
 	FString ErrorLog;
 	ValidateSkillPreActivation(Skill, bValidated, ErrorLog);
-	
+
 	if (bValidated)
-	{
-		ActivateSkill(Skill);
-		Skill->ActivateSkill();
-	}
+		MulticastActivateSkill(Skill);
 	else
-	{
-		OnSkillPreActivationValidationError.Broadcast(Skill, ErrorLog);
-	}
+		ClientReceiveSkillPreActivationValidationError(Skill, ErrorLog);
 }
 
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
@@ -248,4 +237,34 @@ void USkillComponent::ValidateSkillMidCast(USkill* Skill, bool& bValidated, FStr
 void USkillComponent::ValidateSkillPreActivation(USkill* Skill, bool& bValidated, FString& ErrorLog) const
 {
 	bValidated = HasSkill(Skill) && CanSkillBeActivated(Skill, ErrorLog) && Skill->CanSkillBeActivated(ErrorLog);
+}
+
+void USkillComponent::MulticastCastSkill_Implementation(USkill* Skill)
+{
+	Skill->CastSkill();
+}
+
+void USkillComponent::MulticastCancelSkillCast_Implementation(USkill* Skill)
+{
+	Skill->CancelSkillCast();
+}
+
+void USkillComponent::MulticastActivateSkill_Implementation(USkill* Skill)
+{
+	Skill->ActivateSkill();
+}
+
+void USkillComponent::ClientReceiveSkillPreCastValidationError_Implementation(USkill* Skill, const FString& ErrorLog)
+{
+	OnSkillPreCastValidationError.Broadcast(Skill, ErrorLog);
+}
+
+void USkillComponent::ClientReceiveSkillMidCastValidationError_Implementation(USkill* Skill, const FString& ErrorLog)
+{
+	OnSkillMidCastValidationError.Broadcast(Skill, ErrorLog);
+}
+
+void USkillComponent::ClientReceiveSkillPreActivationValidationError_Implementation(USkill* Skill, const FString& ErrorLog)
+{
+	OnSkillPreActivationValidationError.Broadcast(Skill, ErrorLog);
 }

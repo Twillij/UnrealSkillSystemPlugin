@@ -102,6 +102,15 @@ public:
 	UFUNCTION(BlueprintPure)
 	USkillComponent* GetOwningComponent() const;
 
+	UFUNCTION(BlueprintPure, Category = "Online")
+	bool HasAuthority() const;
+	
+	UFUNCTION(BlueprintPure, Category = "Online")
+	bool IsServer() const;
+
+	UFUNCTION(BlueprintPure, Category = "Online")
+	bool IsClient() const;
+	
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Tick")
 	void BlueprintTick(const float DeltaSeconds);
 	virtual void NativeTick(const float DeltaSeconds);

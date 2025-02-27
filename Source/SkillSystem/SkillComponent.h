@@ -62,10 +62,16 @@ public:
     UFUNCTION(BlueprintPure, Category = "Network")
     bool HasAuthority() const { return GetOwnerRole() == ROLE_Authority; }
 
+    UFUNCTION(BlueprintPure, Category = "Network")
+    bool IsServer() const { return GetNetMode() <= NM_ListenServer; }
+
+    UFUNCTION(BlueprintPure, Category = "Network")
+    bool IsClient() const { return GetNetMode() >= NM_ListenServer; }
+    
     // Returns true if the owning pawn is locally controlled.
     UFUNCTION(BlueprintPure, Category = "Network")
     bool IsLocallyControlled() const;
-
+    
     // Returns all currently owned skills.
     UFUNCTION(BlueprintPure, Category = "Skill")
     TArray<USkill*> GetOwnedSkills() { return OwnedSkills; }
@@ -109,6 +115,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
     virtual void TryActivateSkill(USkill* Skill);
 
+    // Attempts to validate a skill before deactivating it.
+    // If the validation fails, it will broadcast the corresponding validation error delegate.
+    //UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
+    //virtual void TryDeactivateSkill(USkill* Skill);
+    
     // A custom implementation for validating a skill before it can be cast
     UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
     bool CanSkillBeCast(USkill* Skill, FString& ErrorLog) const;
@@ -130,12 +141,18 @@ public:
     UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
     void CancelSkillCast(USkill* Skill);
     void CancelSkillCast_Implementation(USkill* Skill) {}
-
+    
     // A custom implementation for activating any skill, called after the skill is successfully validated.
     // This will be called on both the server and all connected clients when using the online component.
     UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
     void ActivateSkill(USkill* Skill);
     void ActivateSkill_Implementation(USkill* Skill) {}
+    
+    // A custom implementation for activating any skill, called after the skill is successfully deactivated.
+    // This will be called on both the server and all connected clients when using the online component.
+    UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+    void DeactivateSkill(USkill* Skill);
+    void DeactivateSkill_Implementation(USkill* Skill) {}
     
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
@@ -180,4 +197,22 @@ protected:
     void ValidateSkillPreCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
     void ValidateSkillMidCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
     void ValidateSkillPreActivation(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
+
+    UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
+    void MulticastCastSkill(USkill* Skill);
+
+    UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
+    void MulticastCancelSkillCast(USkill* Skill);
+	
+    UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
+    void MulticastActivateSkill(USkill* Skill);
+	
+    UFUNCTION(Client, Reliable, Category = "Skill|Execution")
+    void ClientReceiveSkillPreCastValidationError(USkill* Skill, const FString& ErrorLog);
+
+    UFUNCTION(Client, Reliable, Category = "Skill|Execution")
+    void ClientReceiveSkillMidCastValidationError(USkill* Skill, const FString& ErrorLog);
+	
+    UFUNCTION(Client, Reliable, Category = "Skill|Execution")
+    void ClientReceiveSkillPreActivationValidationError(USkill* Skill, const FString& ErrorLog);
 };

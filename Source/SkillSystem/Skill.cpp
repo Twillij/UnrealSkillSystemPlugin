@@ -29,6 +29,24 @@ USkillComponent* USkill::GetOwningComponent() const
 	return Cast<USkillComponent>(GetOuter());
 }
 
+bool USkill::HasAuthority() const
+{
+	const USkillComponent* OwningComponent = GetOwningComponent();
+	return OwningComponent ? OwningComponent->HasAuthority() : false;
+}
+
+bool USkill::IsServer() const
+{
+	const USkillComponent* Owner = GetOwningComponent();
+	return Owner ? Owner->IsServer() : false;
+}
+
+bool USkill::IsClient() const
+{
+	const USkillComponent* Owner = GetOwningComponent();
+	return Owner ? Owner->IsClient() : false;
+}
+
 void USkill::NativeTick(const float DeltaSeconds)
 {
 	if (CastTimer > 0)
@@ -65,7 +83,10 @@ void USkill::RequestOwnerToMaintainCast()
 {
 	if (USkillComponent* Owner = GetOwningComponent())
 	{
-		Owner->TryMaintainSkillCast(this);
+		if (Owner->IsServer())
+		{
+			Owner->TryMaintainSkillCast(this);
+		}
 	}
 }
 
@@ -73,7 +94,10 @@ void USkill::RequestOwnerToActivate()
 {
 	if (USkillComponent* Owner = GetOwningComponent())
 	{
-		Owner->TryActivateSkill(this);
+		if (Owner->IsServer())
+		{
+			Owner->TryActivateSkill(this);
+		}
 	}
 }
 
@@ -93,16 +117,19 @@ bool USkill::CanSkillBeActivated_Implementation(FString& ErrorLog) const
 
 void USkill::CastSkill_Implementation()
 {
+	GetOwningComponent()->CastSkill(this);
 	CastTimer = CastTime;
 }
 
 void USkill::CancelSkillCast_Implementation()
 {
+	GetOwningComponent()->CancelSkillCast(this);
 	CastTimer = 0;
 }
 
 void USkill::ActivateSkill_Implementation()
 {
+	GetOwningComponent()->ActivateSkill(this);
 	DurationTimer = Duration;
 }
 
