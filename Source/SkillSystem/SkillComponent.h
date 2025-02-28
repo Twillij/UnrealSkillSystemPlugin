@@ -1,16 +1,16 @@
 ﻿#pragma once
 
-#include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "EnhancedInputComponent.h"
+#include "Skill.h"
+#include "SkillGlobals.h"
 #include "SkillComponent.generated.h"
 
-enum class ETriggerEvent : uint8;
-struct FSkillData;
 class USkillEffect;
-class UInputAction;
 class USkill;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillStateChanged, USkill*, Skill);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillActivated, USkill*, Skill);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillTerminated, USkill*, Skill, ESkillTerminationType, TerminationType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillValidationError, USkill*, Skill, const FString&, ErrorLog);
 
 UCLASS(Blueprintable)
@@ -19,16 +19,17 @@ class SKILLSYSTEM_API USkillComponent : public UActorComponent
     GENERATED_BODY()
 
 public:
-    FOnSkillStateChanged OnSkillActivated;
+    UPROPERTY(BlueprintAssignable)
+    FOnSkillActivated OnSkillActivated;
 
     UPROPERTY(BlueprintAssignable)
-    FOnSkillValidationError OnSkillPreCastValidationError;
+    FOnSkillTerminated OnSkillTerminated;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnSkillValidationError OnSkillExecutionFailed;
     
     UPROPERTY(BlueprintAssignable)
-    FOnSkillValidationError OnSkillMidCastValidationError;
-    
-    UPROPERTY(BlueprintAssignable)
-    FOnSkillValidationError OnSkillPreActivationValidationError;
+    FOnSkillValidationError OnSkillCastFailed;
     
     // Intended to be modified on the client only, e.g. to load skills from the client's save file.
     // Will be sent to and processed by the server whenever ClientUploadSkillData() is called.
@@ -59,17 +60,17 @@ public:
     AController* GetOwningController() const;
 
     // Returns true if the owning actor has network authority.
-    UFUNCTION(BlueprintPure, Category = "Network")
+    UFUNCTION(BlueprintPure, Category = "Online")
     bool HasAuthority() const { return GetOwnerRole() == ROLE_Authority; }
 
-    UFUNCTION(BlueprintPure, Category = "Network")
+    UFUNCTION(BlueprintPure, Category = "Online")
     bool IsServer() const { return GetNetMode() <= NM_ListenServer; }
 
-    UFUNCTION(BlueprintPure, Category = "Network")
+    UFUNCTION(BlueprintPure, Category = "Online")
     bool IsClient() const { return GetNetMode() >= NM_ListenServer; }
     
     // Returns true if the owning pawn is locally controlled.
-    UFUNCTION(BlueprintPure, Category = "Network")
+    UFUNCTION(BlueprintPure, Category = "Online")
     bool IsLocallyControlled() const;
     
     // Returns all currently owned skills.
@@ -94,65 +95,6 @@ public:
     // Processes a skill data and either updates an existing skill or creates a new one.
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void ProcessSkillData(const FSkillData& InData);
-
-    // Starts the execution of a skill and tries to go through each of the implemented execution phases.
-    // If the cast time for the skill is set to 0, then it will skip the casting phase and go immediately to activation.
-    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    void ExecuteSkill(USkill* Skill);
-
-    // Attempts to validate a skill before casting it.
-    // If the validation fails, it will broadcast the corresponding validation error delegate.
-    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    virtual void TryCastSkill(USkill* Skill);
-
-    // Attempts to validate a skill that is mid-cast every frame.
-    // If the validation fails, it will cancel the cast and broadcast the corresponding validation error delegate.
-    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    virtual void TryMaintainSkillCast(USkill* Skill);
-
-    // Attempts to validate a skill before activating it.
-    // If the validation fails, it will broadcast the corresponding validation error delegate.
-    UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    virtual void TryActivateSkill(USkill* Skill);
-
-    // Attempts to validate a skill before deactivating it.
-    // If the validation fails, it will broadcast the corresponding validation error delegate.
-    //UFUNCTION(BlueprintCallable, Category = "Skill|Execution")
-    //virtual void TryDeactivateSkill(USkill* Skill);
-    
-    // A custom implementation for validating a skill before it can be cast
-    UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
-    bool CanSkillBeCast(USkill* Skill, FString& ErrorLog) const;
-    bool CanSkillBeCast_Implementation(USkill* Skill, FString& ErrorLog) const { return true; }
-
-    // A custom implementation for validating a skill before it can be activated
-    UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
-    bool CanSkillBeActivated(USkill* Skill, FString& ErrorLog) const;
-    bool CanSkillBeActivated_Implementation(USkill* Skill, FString& ErrorLog) const { return true; }
-
-    // A custom implementation for casting any skill, called after the skill is successfully validated.
-    // This will be called on both the server and all connected clients when using the online component.
-    UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
-    void CastSkill(USkill* Skill);
-    void CastSkill_Implementation(USkill* Skill) {}
-
-    // A custom implementation for cancelling any skill, called after the skill fails its mid-cast validation.
-    // This will be called on both the server and all connected clients when using the online component.
-    UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
-    void CancelSkillCast(USkill* Skill);
-    void CancelSkillCast_Implementation(USkill* Skill) {}
-    
-    // A custom implementation for activating any skill, called after the skill is successfully validated.
-    // This will be called on both the server and all connected clients when using the online component.
-    UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
-    void ActivateSkill(USkill* Skill);
-    void ActivateSkill_Implementation(USkill* Skill) {}
-    
-    // A custom implementation for activating any skill, called after the skill is successfully deactivated.
-    // This will be called on both the server and all connected clients when using the online component.
-    UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
-    void DeactivateSkill(USkill* Skill);
-    void DeactivateSkill_Implementation(USkill* Skill) {}
     
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
@@ -193,26 +135,10 @@ protected:
     virtual void OnRegister() override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void TickComponent(const float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+    UFUNCTION(Client, Reliable, Category = "Skill|Execution")
+    void ClientOnSkillExecutionFailed(USkill* Skill, const FString& ErrorLog);
     
-    void ValidateSkillPreCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
-    void ValidateSkillMidCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
-    void ValidateSkillPreActivation(USkill* Skill, bool& bValidated, FString& ErrorLog) const;
-
-    UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
-    void MulticastCastSkill(USkill* Skill);
-
-    UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
-    void MulticastCancelSkillCast(USkill* Skill);
-	
-    UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
-    void MulticastActivateSkill(USkill* Skill);
-	
     UFUNCTION(Client, Reliable, Category = "Skill|Execution")
-    void ClientReceiveSkillPreCastValidationError(USkill* Skill, const FString& ErrorLog);
-
-    UFUNCTION(Client, Reliable, Category = "Skill|Execution")
-    void ClientReceiveSkillMidCastValidationError(USkill* Skill, const FString& ErrorLog);
-	
-    UFUNCTION(Client, Reliable, Category = "Skill|Execution")
-    void ClientReceiveSkillPreActivationValidationError(USkill* Skill, const FString& ErrorLog);
+    void ClientOnSkillCastFailed(USkill* Skill, const FString& ErrorLog);
 };

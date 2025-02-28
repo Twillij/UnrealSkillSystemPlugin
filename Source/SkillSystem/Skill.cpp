@@ -4,29 +4,15 @@
 #include "SkillSystem.h"
 #include "Net/UnrealNetwork.h"
 
-FSkillData::FSkillData(const USkill* InSkill)
-{
-	if (!InSkill) return;
-	SkillClass = InSkill->GetClass();
-	bUnlocked = InSkill->bUnlocked;
-	SkillLevel = InSkill->SkillLevel;
-	CastTime = InSkill->CastTime;
-	Duration = InSkill->Duration;
-	Cooldown = InSkill->Cooldown;
-}
-
-void USkill::UpdateSkillData_Implementation(const FSkillData& SkillData)
-{
-	bUnlocked = SkillData.bUnlocked;
-	SkillLevel = SkillData.SkillLevel;
-	CastTime = SkillData.CastTime;
-	Duration = SkillData.Duration;
-	Cooldown = SkillData.Cooldown;
-}
-
 USkillComponent* USkill::GetOwningComponent() const
 {
 	return Cast<USkillComponent>(GetOuter());
+}
+
+APawn* USkill::GetOwningPawn() const
+{
+	const USkillComponent* Owner = GetOwningComponent();
+	return Owner ? Owner->GetOwningPawn() : nullptr;
 }
 
 bool USkill::HasAuthority() const
@@ -47,93 +33,51 @@ bool USkill::IsClient() const
 	return Owner ? Owner->IsClient() : false;
 }
 
-void USkill::NativeTick(const float DeltaSeconds)
+void USkill::UpdateSkillData_Implementation(const FSkillData& SkillData)
 {
-	if (CastTimer > 0)
-	{
-		RequestOwnerToMaintainCast();
-		CastTimer -= DeltaSeconds;
-		
-		if (CastTimer <= 0)
-		{
-			RequestOwnerToActivate();
-		}
-	}
-	else if (DurationTimer > 0)
-	{
-		DurationTimer -= DeltaSeconds;
-		if (DurationTimer <= 0) DeactivateSkill();
-	}
-	else if (CooldownTimer > 0)
-	{
-		CooldownTimer -= DeltaSeconds;
-	}
-	BlueprintTick(DeltaSeconds);
+	bUnlocked = SkillData.bUnlocked;
+	SkillLevel = SkillData.SkillLevel;
+	Duration = SkillData.Duration;
+	Cooldown = SkillData.Cooldown;
 }
 
-void USkill::RequestOwnerToExecute()
+void USkill::ExecuteSkill_Implementation()
 {
-	if (USkillComponent* Owner = GetOwningComponent())
+	ServerActivateSkill();
+}
+
+void USkill::ServerActivateSkill_Implementation()
+{
+	FString ErrorLog;
+	if (CanSkillBeActivated(ErrorLog))
 	{
-		Owner->ExecuteSkill(this);
+		MulticastActivateSkill();
+	}
+	else
+	{
+		// TODO: Handle error
 	}
 }
 
-void USkill::RequestOwnerToMaintainCast()
+void USkill::ServerTerminateSkill_Implementation(const ESkillTerminationType TerminationType)
 {
-	if (USkillComponent* Owner = GetOwningComponent())
+	FString ErrorLog;
+	if (CanSkillBeTerminated(TerminationType, ErrorLog))
 	{
-		if (Owner->IsServer())
-		{
-			Owner->TryMaintainSkillCast(this);
-		}
+		MulticastTerminateSkill(TerminationType);
+	}
+	else
+	{
+		// TODO: Handle error
 	}
 }
 
-void USkill::RequestOwnerToActivate()
+void USkill::OnSkillActivation_Implementation()
 {
-	if (USkillComponent* Owner = GetOwningComponent())
-	{
-		if (Owner->IsServer())
-		{
-			Owner->TryActivateSkill(this);
-		}
-	}
-}
-
-bool USkill::CanSkillBeCast_Implementation(FString& ErrorLog) const
-{
-	const bool bSuccess = bUnlocked;
-	if (!bUnlocked) ErrorLog.Append("LOCKED;");
-	return bSuccess;
-}
-
-bool USkill::CanSkillBeActivated_Implementation(FString& ErrorLog) const
-{
-	const bool bSuccess = bUnlocked;
-	if (!bUnlocked) ErrorLog.Append("LOCKED;");
-	return bSuccess;
-}
-
-void USkill::CastSkill_Implementation()
-{
-	GetOwningComponent()->CastSkill(this);
-	CastTimer = CastTime;
-}
-
-void USkill::CancelSkillCast_Implementation()
-{
-	GetOwningComponent()->CancelSkillCast(this);
-	CastTimer = 0;
-}
-
-void USkill::ActivateSkill_Implementation()
-{
-	GetOwningComponent()->ActivateSkill(this);
 	DurationTimer = Duration;
 }
 
-void USkill::DeactivateSkill_Implementation()
+void USkill::OnSkillTermination_Implementation(const ESkillTerminationType TerminationType)
 {
 	CooldownTimer = Cooldown;
 }
@@ -143,7 +87,6 @@ void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePr
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(USkill, bUnlocked);
 	DOREPLIFETIME(USkill, SkillLevel);
-	DOREPLIFETIME(USkill, CastTime);
 	DOREPLIFETIME(USkill, Duration);
 	DOREPLIFETIME(USkill, Cooldown);
 }
@@ -160,4 +103,30 @@ void USkill::PostInitProperties()
 		}
 		NativeBeginPlay();
 	}
+}
+
+void USkill::MulticastActivateSkill_Implementation()
+{
+	OnSkillActivation();
+	GetOwningComponent()->OnSkillActivated.Broadcast(this);
+}
+
+void USkill::MulticastTerminateSkill_Implementation(const ESkillTerminationType TerminationType)
+{
+	OnSkillTermination(TerminationType);
+	GetOwningComponent()->OnSkillTerminated.Broadcast(this, TerminationType);
+}
+
+void USkill::NativeTick(const float DeltaSeconds)
+{
+	if (DurationTimer > 0)
+	{
+		DurationTimer -= DeltaSeconds;
+		if (DurationTimer <= 0 && IsServer()) ServerTerminateSkill(ESkillTerminationType::Expired);
+	}
+	else if (CooldownTimer > 0)
+	{
+		CooldownTimer -= DeltaSeconds;
+	}
+	BlueprintTick(DeltaSeconds);
 }

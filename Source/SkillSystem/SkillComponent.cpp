@@ -71,57 +71,6 @@ void USkillComponent::ProcessSkillData(const FSkillData& InData)
 	Skill->UpdateSkillData(InData);
 }
 
-void USkillComponent::ExecuteSkill(USkill* Skill)
-{
-	if (!HasSkill(Skill)) return;
-
-	if (Skill->CastTime > 0)
-	{
-		TryCastSkill(Skill);
-	}
-	else // CastTime <= 0
-	{
-		TryActivateSkill(Skill);
-	}
-}
-
-void USkillComponent::TryCastSkill(USkill* Skill)
-{
-	bool bValidated;
-	FString ErrorLog;
-	ValidateSkillPreCast(Skill, bValidated, ErrorLog);
-
-	if (bValidated)
-		MulticastCastSkill(Skill);
-	else
-		ClientReceiveSkillPreCastValidationError(Skill, ErrorLog);
-}
-
-void USkillComponent::TryMaintainSkillCast(USkill* Skill)
-{
-	bool bValidated;
-	FString ErrorLog;
-	ValidateSkillMidCast(Skill, bValidated, ErrorLog);
-	
-	if (!bValidated)
-	{
-		ClientReceiveSkillMidCastValidationError(Skill, ErrorLog);
-		MulticastCancelSkillCast(Skill);
-	}
-}
-
-void USkillComponent::TryActivateSkill(USkill* Skill)
-{
-	bool bValidated;
-	FString ErrorLog;
-	ValidateSkillPreActivation(Skill, bValidated, ErrorLog);
-
-	if (bValidated)
-		MulticastActivateSkill(Skill);
-	else
-		ClientReceiveSkillPreActivationValidationError(Skill, ErrorLog);
-}
-
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
 {
 	AppliedEffects.Add(Effect);
@@ -135,7 +84,7 @@ bool USkillComponent::BindSkillToInput(const TSubclassOf<USkill> SkillClass, con
 	if (!Skill || !Controller || !Controller->InputComponent || !Controller->IsLocalPlayerController())
 		return false;
 
-	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::RequestOwnerToExecute);
+	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::ExecuteSkill);
 	return true;
 }
 
@@ -149,7 +98,7 @@ bool USkillComponent::BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillCl
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Controller->InputComponent))
 	{
-		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::RequestOwnerToExecute);
+		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::ExecuteSkill);
 		return true;
 	}
 	return false;
@@ -224,47 +173,12 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 	}
 }
 
-void USkillComponent::ValidateSkillPreCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const
+void USkillComponent::ClientOnSkillExecutionFailed_Implementation(USkill* Skill, const FString& ErrorLog)
 {
-	bValidated = HasSkill(Skill) && CanSkillBeCast(Skill, ErrorLog) && Skill->CanSkillBeCast(ErrorLog);
+	OnSkillExecutionFailed.Broadcast(Skill, ErrorLog);
 }
 
-void USkillComponent::ValidateSkillMidCast(USkill* Skill, bool& bValidated, FString& ErrorLog) const
+void USkillComponent::ClientOnSkillCastFailed_Implementation(USkill* Skill, const FString& ErrorLog)
 {
-	bValidated = HasSkill(Skill) && CanSkillBeCast(Skill, ErrorLog) && Skill->CanSkillBeCast(ErrorLog);
-}
-
-void USkillComponent::ValidateSkillPreActivation(USkill* Skill, bool& bValidated, FString& ErrorLog) const
-{
-	bValidated = HasSkill(Skill) && CanSkillBeActivated(Skill, ErrorLog) && Skill->CanSkillBeActivated(ErrorLog);
-}
-
-void USkillComponent::MulticastCastSkill_Implementation(USkill* Skill)
-{
-	Skill->CastSkill();
-}
-
-void USkillComponent::MulticastCancelSkillCast_Implementation(USkill* Skill)
-{
-	Skill->CancelSkillCast();
-}
-
-void USkillComponent::MulticastActivateSkill_Implementation(USkill* Skill)
-{
-	Skill->ActivateSkill();
-}
-
-void USkillComponent::ClientReceiveSkillPreCastValidationError_Implementation(USkill* Skill, const FString& ErrorLog)
-{
-	OnSkillPreCastValidationError.Broadcast(Skill, ErrorLog);
-}
-
-void USkillComponent::ClientReceiveSkillMidCastValidationError_Implementation(USkill* Skill, const FString& ErrorLog)
-{
-	OnSkillMidCastValidationError.Broadcast(Skill, ErrorLog);
-}
-
-void USkillComponent::ClientReceiveSkillPreActivationValidationError_Implementation(USkill* Skill, const FString& ErrorLog)
-{
-	OnSkillPreActivationValidationError.Broadcast(Skill, ErrorLog);
+	OnSkillCastFailed.Broadcast(Skill, ErrorLog);
 }
