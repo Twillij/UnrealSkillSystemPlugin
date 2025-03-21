@@ -39,7 +39,7 @@ public:
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	virtual void NativeTick(const float DeltaSeconds) override;
+	virtual void Tick_Implementation(const float DeltaSeconds) override;
 
 private:
 	UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")

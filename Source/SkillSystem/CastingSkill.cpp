@@ -40,7 +40,7 @@ inline void UCastingSkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	DOREPLIFETIME(UCastingSkill, CastTime);
 }
 
-void UCastingSkill::NativeTick(const float DeltaSeconds)
+void UCastingSkill::Tick_Implementation(const float DeltaSeconds)
 {
 	if (CastTimer > 0)
 	{
@@ -53,7 +53,7 @@ void UCastingSkill::NativeTick(const float DeltaSeconds)
 		}
 	}
 
-	Super::NativeTick(DeltaSeconds);
+	Super::Tick_Implementation(DeltaSeconds);
 }
 
 inline void UCastingSkill::MulticastCastSkill_Implementation()

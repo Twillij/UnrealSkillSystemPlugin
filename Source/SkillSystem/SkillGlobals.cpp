@@ -7,6 +7,4 @@ FSkillData::FSkillData(const USkill* InSkill)
 	SkillClass = InSkill->GetClass();
 	bUnlocked = InSkill->bUnlocked;
 	SkillLevel = InSkill->SkillLevel;
-	Duration = InSkill->Duration;
-	Cooldown = InSkill->Cooldown;
 }

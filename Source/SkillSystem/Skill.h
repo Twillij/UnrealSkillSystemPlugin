@@ -68,6 +68,9 @@ public:
 	USkillComponent* GetOwningComponent() const;
 
 	UFUNCTION(BlueprintPure)
+	virtual UWorld* GetWorld() const override;
+	
+	UFUNCTION(BlueprintPure)
 	APawn* GetOwningPawn() const;
 	
 	UFUNCTION(BlueprintPure, Category = "Online")
@@ -121,18 +124,17 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Debug")
 	FString GetLockedStatusAsString() const { return bUnlocked ? "Unlocked" : "Locked"; }
 
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "Tick")
-	void BlueprintTick(const float DeltaSeconds);
-	virtual void NativeTick(const float DeltaSeconds);
+	UFUNCTION(BlueprintNativeEvent)
+	void Tick(const float DeltaSeconds);
 	
 protected:
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitProperties() override;
 	
-	UFUNCTION(BlueprintImplementableEvent, DisplayName = "BeginPlay")
-	void BlueprintBeginPlay();
-	void NativeBeginPlay() { BlueprintBeginPlay(); }
+	UFUNCTION(BlueprintNativeEvent)
+	void BeginPlay();
+	void BeginPlay_Implementation() {}
 
 private:
 	UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")

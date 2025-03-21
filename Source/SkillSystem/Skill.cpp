@@ -9,6 +9,12 @@ USkillComponent* USkill::GetOwningComponent() const
 	return Cast<USkillComponent>(GetOuter());
 }
 
+UWorld* USkill::GetWorld() const
+{
+	if (IsTemplate() || !GetOuter()) return nullptr;
+	return GetOuter()->GetWorld();
+}
+
 APawn* USkill::GetOwningPawn() const
 {
 	const USkillComponent* Owner = GetOwningComponent();
@@ -37,8 +43,6 @@ void USkill::UpdateSkillData_Implementation(const FSkillData& SkillData)
 {
 	bUnlocked = SkillData.bUnlocked;
 	SkillLevel = SkillData.SkillLevel;
-	Duration = SkillData.Duration;
-	Cooldown = SkillData.Cooldown;
 }
 
 void USkill::ExecuteSkill_Implementation()
@@ -101,7 +105,20 @@ void USkill::PostInitProperties()
 		{
 			UE_LOG(LogSkill, Error, TEXT("%s has an invalid skill outer. Outer is expected to be its owning skill component."), *GetName())
 		}
-		NativeBeginPlay();
+		BeginPlay();
+	}
+}
+
+void USkill::Tick_Implementation(const float DeltaSeconds)
+{
+	if (DurationTimer > 0)
+	{
+		DurationTimer -= DeltaSeconds;
+		if (DurationTimer <= 0 && IsServer()) ServerTerminateSkill(ESkillTerminationType::Expired);
+	}
+	else if (CooldownTimer > 0)
+	{
+		CooldownTimer -= DeltaSeconds;
 	}
 }
 
@@ -115,18 +132,4 @@ void USkill::MulticastTerminateSkill_Implementation(const ESkillTerminationType 
 {
 	OnSkillTermination(TerminationType);
 	GetOwningComponent()->OnSkillTerminated.Broadcast(this, TerminationType);
-}
-
-void USkill::NativeTick(const float DeltaSeconds)
-{
-	if (DurationTimer > 0)
-	{
-		DurationTimer -= DeltaSeconds;
-		if (DurationTimer <= 0 && IsServer()) ServerTerminateSkill(ESkillTerminationType::Expired);
-	}
-	else if (CooldownTimer > 0)
-	{
-		CooldownTimer -= DeltaSeconds;
-	}
-	BlueprintTick(DeltaSeconds);
 }

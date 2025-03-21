@@ -28,12 +28,6 @@ struct FSkillData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
 	int32 SkillLevel = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Duration = 0;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
-	float Cooldown = 0;
-
 	FSkillData() {}
 	FSkillData(const USkill* InSkill);
 };
