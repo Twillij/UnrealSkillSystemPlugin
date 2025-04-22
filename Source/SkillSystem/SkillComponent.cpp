@@ -1,6 +1,7 @@
 ﻿#include "SkillComponent.h"
 #include "EnhancedInputComponent.h"
 #include "Skill.h"
+#include "SkillDebugSubsystem.h"
 #include "SkillEffect.h"
 #include "GameFramework/Pawn.h"
 #include "Net/UnrealNetwork.h"
@@ -137,25 +138,37 @@ FString USkillComponent::GetOwnerNetRoleAsString() const
 	return EnumPtr ? EnumPtr->GetNameStringByValue(GetOwnerRole()) : "Invalid";
 }
 
-void USkillComponent::OnRegister()
-{
-	Super::OnRegister();
-	
-	if (GetWorld() && GetWorld()->IsGameWorld() && HasAuthority())
-	{
-		// Initialize the preset skills
-		for (int i = 0; i < PresetSkills.Num(); ++i)
-		{
-			ProcessSkillData(PresetSkills[i]);
-		}
-	}
-}
-
 void USkillComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(USkillComponent, OwnedSkills);
 	DOREPLIFETIME(USkillComponent, AppliedEffects);
+}
+
+void USkillComponent::OnRegister()
+{
+	Super::OnRegister();
+
+	if (GetWorld() && GetWorld()->IsGameWorld())
+	{
+		USkillDebugSubsystem::Get(this)->RegisterComponent(this);
+		
+		if (HasAuthority())
+		{
+			// Initialize the preset skills
+			for (int i = 0; i < PresetSkills.Num(); ++i)
+			{
+				ProcessSkillData(PresetSkills[i]);
+			}
+		}
+	}
+}
+
+void USkillComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	USkillDebugSubsystem::Get(this)->UnregisterComponent(this);
 }
 
 void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
