@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Subsystems/WorldSubsystem.h"
 #include "SkillDebugSubsystem.generated.h"
 
 class USkillComponent;
@@ -10,7 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillComponentRegistered, USkillC
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillComponentUnregistered, USkillComponent*, Component);
 
 UCLASS()
-class SKILLSYSTEM_API USkillDebugSubsystem : public UGameInstanceSubsystem
+class SKILLSYSTEM_API USkillDebugSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
@@ -20,7 +21,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnSkillComponentUnregistered OnSkillComponentUnregistered;
-	
+
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	TArray<USkillComponent*> ActiveSkillComponents;
@@ -33,4 +34,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UnregisterComponent(USkillComponent* RegisteredComponent);
+
+protected:
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 };

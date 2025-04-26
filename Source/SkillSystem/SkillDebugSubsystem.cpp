@@ -1,10 +1,9 @@
 #include "SkillDebugSubsystem.h"
-#include "Kismet/GameplayStatics.h"
 
 USkillDebugSubsystem* USkillDebugSubsystem::Get(const UObject* WorldContextObject)
 {
-	const UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(WorldContextObject);
-	return GameInstance ? GameInstance->GetSubsystem<USkillDebugSubsystem>() : nullptr;
+	const UWorld* World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+	return World ? World->GetSubsystem<USkillDebugSubsystem>() : nullptr;
 }
 
 void USkillDebugSubsystem::RegisterComponent(USkillComponent* NewComponent)
@@ -17,4 +16,11 @@ void USkillDebugSubsystem::UnregisterComponent(USkillComponent* RegisteredCompon
 {
 	ActiveSkillComponents.Remove(RegisteredComponent);
 	OnSkillComponentUnregistered.Broadcast(RegisteredComponent);
+}
+
+bool USkillDebugSubsystem::ShouldCreateSubsystem(UObject* Outer) const
+{
+	const bool bShouldCreateSubsystem = Super::ShouldCreateSubsystem(Outer);
+	UE_LOG(LogTemp, Warning, TEXT("ShouldCreateSubsystem: %s"), bShouldCreateSubsystem ? TEXT("TRUE") : TEXT("FALSE"));
+	return bShouldCreateSubsystem;
 }
