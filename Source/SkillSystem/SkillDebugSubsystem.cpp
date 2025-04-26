@@ -1,4 +1,5 @@
 #include "SkillDebugSubsystem.h"
+#include "SkillSystemSettings.h"
 
 USkillDebugSubsystem* USkillDebugSubsystem::Get(const UObject* WorldContextObject)
 {
@@ -20,7 +21,6 @@ void USkillDebugSubsystem::UnregisterComponent(USkillComponent* RegisteredCompon
 
 bool USkillDebugSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
-	const bool bShouldCreateSubsystem = Super::ShouldCreateSubsystem(Outer);
-	UE_LOG(LogTemp, Warning, TEXT("ShouldCreateSubsystem: %s"), bShouldCreateSubsystem ? TEXT("TRUE") : TEXT("FALSE"));
+	const bool bShouldCreateSubsystem = Super::ShouldCreateSubsystem(Outer) && GetDefault<USkillSystemSettings>()->bEnableDebugger;
 	return bShouldCreateSubsystem;
 }

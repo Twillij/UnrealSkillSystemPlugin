@@ -24,6 +24,7 @@ public class SkillSystem : ModuleRules
 			new string[]
 			{
 				"Core",
+				"DeveloperSettings",
 				"EnhancedInput",
 				"InputCore",
 				"UMG"

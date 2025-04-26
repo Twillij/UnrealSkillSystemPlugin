@@ -151,7 +151,10 @@ void USkillComponent::OnRegister()
 
 	if (GetWorld() && GetWorld()->IsGameWorld())
 	{
-		USkillDebugSubsystem::Get(this)->RegisterComponent(this);
+		if (USkillDebugSubsystem* SkillDebugSubsystem = USkillDebugSubsystem::Get(this))
+		{
+			SkillDebugSubsystem->RegisterComponent(this);
+		}
 		
 		if (HasAuthority())
 		{
@@ -168,7 +171,10 @@ void USkillComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 
-	USkillDebugSubsystem::Get(this)->UnregisterComponent(this);
+	if (USkillDebugSubsystem* SkillDebugSubsystem = USkillDebugSubsystem::Get(this))
+	{
+		SkillDebugSubsystem->UnregisterComponent(this);
+	}
 }
 
 void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
