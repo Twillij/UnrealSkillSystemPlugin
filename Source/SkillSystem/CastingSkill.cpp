@@ -7,7 +7,7 @@ UCastingSkill::UCastingSkill()
 	bPassive = false;
 }
 
-void UCastingSkill::ExecuteSkill_Implementation()
+void UCastingSkill::OnSkillInputReceived_Implementation()
 {
 	ServerCastSkill();
 }

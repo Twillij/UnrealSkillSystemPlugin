@@ -86,36 +86,36 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void UpdateSkillData(const FSkillData& SkillData);
 
-	// Enters the skill execution process - can be overridden for custom implementation.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill|Execution")
-	void ExecuteSkill();
+	// Called when the input for the skill is received - overrideable for custom implementation.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
+	void OnSkillInputReceived();
 
 	// Attempts to activate the skill after doing a validation check on the server.
-	// Note: Only use this when overriding ExecuteSkill(), otherwise use ExecuteSkill() instead.
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill|Execution")
+	// Note: Only call this when overriding OnSkillInputReceived().
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill")
 	void ServerActivateSkill();
 
 	// Attempts to terminate the skill after doing a validation check on the server.
-	// Note: Only use this when overriding ExecuteSkill(), otherwise use ExecuteSkill() instead.
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill|Execution")
+	// Note: Only call this when overriding OnSkillInputReceived().
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill")
 	void ServerTerminateSkill(const ESkillTerminationType TerminationType);
 	
 	// Implements custom code for validating a skill before it can be activated.
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill")
 	bool CanSkillBeActivated(FString& ErrorLog) const;
 	bool CanSkillBeActivated_Implementation(FString& ErrorLog) const { return true; }
 	
 	// Implements custom code for validating a skill before it can be terminated.
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill")
 	bool CanSkillBeTerminated(ESkillTerminationType TerminationType, FString& ErrorLog) const;
 	bool CanSkillBeTerminated_Implementation(ESkillTerminationType TerminationType, FString& ErrorLog) const { return true; }
 	
 	// Implements custom code for skill activation, called on both server and client after being validated.
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void OnSkillActivation();
 
 	// Implements custom code for skill termination, called on both server and client after being validated.
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill|Execution")
+	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void OnSkillTermination(const ESkillTerminationType TerminationType);
 	
 	UFUNCTION(BlueprintPure, Category = "Debug")
@@ -137,9 +137,9 @@ protected:
 	void BeginPlay_Implementation() {}
 
 private:
-	UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
+	UFUNCTION(NetMulticast, Reliable, Category = "Skill")
 	void MulticastActivateSkill();
 
-	UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
+	UFUNCTION(NetMulticast, Reliable, Category = "Skill")
 	void MulticastTerminateSkill(const ESkillTerminationType TerminationType);
 };

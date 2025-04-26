@@ -85,7 +85,7 @@ bool USkillComponent::BindSkillToInput(const TSubclassOf<USkill> SkillClass, con
 	if (!Skill || !Controller || !Controller->InputComponent || !Controller->IsLocalPlayerController())
 		return false;
 
-	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::ExecuteSkill);
+	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::OnSkillInputReceived);
 	return true;
 }
 
@@ -99,7 +99,7 @@ bool USkillComponent::BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillCl
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Controller->InputComponent))
 	{
-		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::ExecuteSkill);
+		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::OnSkillInputReceived);
 		return true;
 	}
 	return false;

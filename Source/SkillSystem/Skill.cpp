@@ -45,7 +45,7 @@ void USkill::UpdateSkillData_Implementation(const FSkillData& SkillData)
 	SkillLevel = SkillData.SkillLevel;
 }
 
-void USkill::ExecuteSkill_Implementation()
+void USkill::OnSkillInputReceived_Implementation()
 {
 	ServerActivateSkill();
 }

@@ -21,19 +21,19 @@ protected:
 public:
 	UCastingSkill();
 
-	virtual void ExecuteSkill_Implementation() override;
+	virtual void OnSkillInputReceived_Implementation() override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Skill")
 	void SetCastTimer(const float NewTimer);
 	float GetCastTimer() const { return CastTimer; }
 
 	// Attempts to cast the skill after doing a validation check on the server.
-	// Note: Only use this when overriding ExecuteSkill(), otherwise use ExecuteSkill() instead.
-	UFUNCTION(Server, Reliable, Category = "Skill|Execution")
+	// Note: Only call this when overriding OnSkillInputReceived().
+	UFUNCTION(Server, Reliable, Category = "Skill")
 	void ServerCastSkill();
 
 	// Implements custom code for validating a skill before it can be cast.
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill|Execution")
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill")
 	bool CanSkillBeCast(FString& ErrorLog) const;
 	bool CanSkillBeCast_Implementation(FString& ErrorLog) const { return true; }
 
@@ -42,6 +42,6 @@ protected:
 	virtual void Tick_Implementation(const float DeltaSeconds) override;
 
 private:
-	UFUNCTION(NetMulticast, Reliable, Category = "Skill|Execution")
+	UFUNCTION(NetMulticast, Reliable, Category = "Skill")
 	void MulticastCastSkill();
 };
