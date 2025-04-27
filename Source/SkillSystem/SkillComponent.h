@@ -71,7 +71,7 @@ public:
     
     // Returns true if the owning pawn is locally controlled.
     UFUNCTION(BlueprintPure, Category = "Online")
-    bool IsLocallyControlled() const;
+    bool IsOwnerLocallyControlled() const;
     
     // Returns all currently owned skills.
     UFUNCTION(BlueprintPure, Category = "Skill")
@@ -130,6 +130,9 @@ public:
     
     UFUNCTION(BlueprintPure, Category = "Debug")
     FString GetOwnerNetRoleAsString() const;
+
+    UFUNCTION(BlueprintPure, Category = "Debug")
+    FString GetOwnerControlTypeAsString() const;
 
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

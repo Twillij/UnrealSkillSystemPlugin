@@ -19,7 +19,7 @@ AController* USkillComponent::GetOwningController() const
 	return OwningPawn ? OwningPawn->GetController() : nullptr;
 }
 
-bool USkillComponent::IsLocallyControlled() const
+bool USkillComponent::IsOwnerLocallyControlled() const
 {
 	const AController* OwningController = GetOwningController();
 	return OwningController && OwningController->IsLocalController();
@@ -136,6 +136,11 @@ FString USkillComponent::GetOwnerNetRoleAsString() const
 {
 	const UEnum* EnumPtr = FindFirstObjectSafe<UEnum>(TEXT("ENetRole"));
 	return EnumPtr ? EnumPtr->GetNameStringByValue(GetOwnerRole()) : "Invalid";
+}
+
+FString USkillComponent::GetOwnerControlTypeAsString() const
+{
+	return IsOwnerLocallyControlled() ? "Local" : "Remote";
 }
 
 void USkillComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
