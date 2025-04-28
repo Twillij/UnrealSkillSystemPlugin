@@ -32,15 +32,15 @@ public:
     FOnSkillValidationError OnSkillCastFailed;
     
     // Intended to be modified on the client only, e.g. to load skills from the client's save file.
-    // Will be sent to and processed by the server whenever ClientUploadSkillData() is called.
+    // Will be sent to and processed by the server whenever ClientUploadSkillInfo() is called.
     // Afterwards, a copy of the data will be stored on the server for caching purposes.
     UPROPERTY(BlueprintReadWrite, Category = "Skill|Network")
-    TArray<FSkillData> ClientSkillData;
+    TArray<FSkillInfo> ClientSkillInfo;
     
 protected:
     // Skill data used to create the initial array of skills
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    TArray<FSkillData> PresetSkills;
+    TArray<FSkillInfo> PresetSkills;
     
     // A replicated array of currently owned skills
     UPROPERTY(Replicated)
@@ -94,7 +94,7 @@ public:
 
     // Processes a skill data and either updates an existing skill or creates a new one.
     UFUNCTION(BlueprintCallable, Category = "Skill")
-    void ProcessSkillData(const FSkillData& InData);
+    void ProcessSkillInfo(const FSkillInfo& InData);
     
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
@@ -108,19 +108,19 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Skill|Input")
     bool BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillClass, const UInputAction* InputAction, const ETriggerEvent TriggerEvent);
     
-    // Default implementation returns the ClientSkillData array.
+    // Default implementation returns the ClientSkillInfo array.
     // Intended for custom implementation to be called on the client e.g. to load skills from the client's save file.
-    // Called by ClientUploadSkillData() to be sent to the server to process.
+    // Called by ClientUploadSkillInfo() to be sent to the server to process.
     UFUNCTION(BlueprintNativeEvent, Category = "Skill|Network")
-    TArray<FSkillData> GetClientSkillData();
+    TArray<FSkillInfo> GetClientSkillInfo();
     
-    // Sends ClientSourcedSkillData to the server to process.
+    // Sends ClientSourcedSkillInfo to the server to process.
     UFUNCTION(Client, Reliable, BlueprintCallable, Category = "Skill|Network")
-    void ClientUploadSkillData();
+    void ClientUploadSkillInfo();
     
     // Processes the provided skill data on the server and replicates any data changes back to the owning client.
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill|Network")
-    void ServerDownloadSkillData(const TArray<FSkillData>& InDataArray);
+    void ServerDownloadSkillInfo(const TArray<FSkillInfo>& InDataArray);
     
     UFUNCTION(BlueprintPure, Category = "Debug")
     FString GetClassName() const { return GetClass()->GetName(); }

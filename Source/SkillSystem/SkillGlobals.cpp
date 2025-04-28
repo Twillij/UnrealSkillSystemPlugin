@@ -1,7 +1,7 @@
 #include "SkillGlobals.h"
 #include "Skill.h"
 
-FSkillData::FSkillData(const USkill* InSkill)
+FSkillInfo::FSkillInfo(const USkill* InSkill)
 {
 	if (!InSkill) return;
 	SkillClass = InSkill->GetClass();

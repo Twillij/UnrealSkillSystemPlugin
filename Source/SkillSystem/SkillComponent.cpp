@@ -60,7 +60,7 @@ bool USkillComponent::DeregisterSkill(USkill* Skill)
 	return false;
 }
 
-void USkillComponent::ProcessSkillData(const FSkillData& InData)
+void USkillComponent::ProcessSkillInfo(const FSkillInfo& InData)
 {
 	USkill* Skill = GetSkillOfClass(InData.SkillClass);
 	if (!Skill)
@@ -69,7 +69,7 @@ void USkillComponent::ProcessSkillData(const FSkillData& InData)
 		Skill = NewObject<USkill>(this, InData.SkillClass);
 		if (!RegisterSkill(Skill)) return;
 	}
-	Skill->UpdateSkillData(InData);
+	Skill->UpdateSkillInfo(InData);
 }
 
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
@@ -105,24 +105,24 @@ bool USkillComponent::BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillCl
 	return false;
 }
 
-TArray<FSkillData> USkillComponent::GetClientSkillData_Implementation()
+TArray<FSkillInfo> USkillComponent::GetClientSkillInfo_Implementation()
 {
-	return ClientSkillData;
+	return ClientSkillInfo;
 }
 
-void USkillComponent::ClientUploadSkillData_Implementation()
+void USkillComponent::ClientUploadSkillInfo_Implementation()
 {
-	ServerDownloadSkillData(GetClientSkillData());
+	ServerDownloadSkillInfo(GetClientSkillInfo());
 }
 
-void USkillComponent::ServerDownloadSkillData_Implementation(const TArray<FSkillData>& InDataArray)
+void USkillComponent::ServerDownloadSkillInfo_Implementation(const TArray<FSkillInfo>& InDataArray)
 {
 	// Cache the client skill data
-	ClientSkillData = InDataArray;
+	ClientSkillInfo = InDataArray;
 	
 	for (int i = 0; i < InDataArray.Num(); ++i)
 	{
-		ProcessSkillData(InDataArray[i]);
+		ProcessSkillInfo(InDataArray[i]);
 	}
 }
 
@@ -166,7 +166,7 @@ void USkillComponent::OnRegister()
 			// Initialize the preset skills
 			for (int i = 0; i < PresetSkills.Num(); ++i)
 			{
-				ProcessSkillData(PresetSkills[i]);
+				ProcessSkillInfo(PresetSkills[i]);
 			}
 		}
 	}

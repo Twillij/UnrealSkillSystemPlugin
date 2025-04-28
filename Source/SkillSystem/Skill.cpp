@@ -39,10 +39,10 @@ bool USkill::IsClient() const
 	return Owner ? Owner->IsClient() : false;
 }
 
-void USkill::UpdateSkillData_Implementation(const FSkillData& SkillData)
+void USkill::UpdateSkillInfo_Implementation(const FSkillInfo& SkillInfo)
 {
-	bUnlocked = SkillData.bUnlocked;
-	SkillLevel = SkillData.SkillLevel;
+	bUnlocked = SkillInfo.bUnlocked;
+	SkillLevel = SkillInfo.SkillLevel;
 }
 
 void USkill::OnSkillInputReceived_Implementation()

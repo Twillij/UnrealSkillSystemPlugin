@@ -15,7 +15,7 @@ enum class ESkillTerminationType : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FSkillData : public FTableRowBase
+struct FSkillInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -28,6 +28,18 @@ struct FSkillData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
 	int32 SkillLevel = 0;
 
-	FSkillData() {}
-	FSkillData(const USkill* InSkill);
+	FSkillInfo() {}
+	FSkillInfo(const USkill* InSkill);
+};
+
+USTRUCT(BlueprintType)
+struct FSkillUsageLog
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString OwnerName;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FSkillInfo SkillInfo;
 };

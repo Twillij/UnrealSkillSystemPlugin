@@ -3,17 +3,17 @@
 #include "SkillComponent.h"
 #include "EnhancedInputComponent.h"
 
-USkill* USkillFunctionLibrary::CreateSkill(USkillComponent* OwningComponent, const FSkillData& SkillData)
+USkill* USkillFunctionLibrary::CreateSkill(USkillComponent* OwningComponent, const FSkillInfo& SkillInfo)
 {
-	if (USkill* NewSkill = NewObject<USkill>(OwningComponent, SkillData.SkillClass))
+	if (USkill* NewSkill = NewObject<USkill>(OwningComponent, SkillInfo.SkillClass))
 	{
-		NewSkill->UpdateSkillData(SkillData);
+		NewSkill->UpdateSkillInfo(SkillInfo);
 		return NewSkill;
 	}
 	return nullptr;
 }
 
-FSkillData USkillFunctionLibrary::CreateSkillData(USkill* Skill)
+FSkillInfo USkillFunctionLibrary::CreateSkillInfo(USkill* Skill)
 {
-	return FSkillData(Skill);
+	return FSkillInfo(Skill);
 }

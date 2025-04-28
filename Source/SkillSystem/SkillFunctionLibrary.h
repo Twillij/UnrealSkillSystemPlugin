@@ -5,7 +5,7 @@
 #include "SkillFunctionLibrary.generated.h"
 
 enum class ETriggerEvent : uint8;
-struct FSkillData;
+struct FSkillInfo;
 class UInputAction;
 class USkill;
 class USkillComponent;
@@ -17,8 +17,8 @@ class SKILLSYSTEM_API USkillFunctionLibrary : public UBlueprintFunctionLibrary
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	static USkill* CreateSkill(USkillComponent* OwningComponent, const FSkillData& SkillData);
+	static USkill* CreateSkill(USkillComponent* OwningComponent, const FSkillInfo& SkillInfo);
 
 	UFUNCTION(BlueprintCallable, Category = "Skill")
-	static FSkillData CreateSkillData(USkill* Skill);
+	static FSkillInfo CreateSkillInfo(USkill* Skill);
 };

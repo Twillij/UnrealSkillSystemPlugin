@@ -84,7 +84,7 @@ public:
 
 	// Updates the skill with the new data
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	void UpdateSkillData(const FSkillData& SkillData);
+	void UpdateSkillInfo(const FSkillInfo& SkillInfo);
 
 	// Called when the input for the skill is received - overrideable for custom implementation.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Skill")
