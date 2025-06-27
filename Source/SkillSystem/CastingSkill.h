@@ -20,8 +20,6 @@ protected:
 
 public:
 	UCastingSkill();
-
-	virtual void OnSkillInputReceived_Implementation() override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Skill")
 	void SetCastTimer(const float NewTimer);

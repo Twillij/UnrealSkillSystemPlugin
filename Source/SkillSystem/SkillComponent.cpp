@@ -72,6 +72,15 @@ void USkillComponent::ProcessSkillInfo(const FSkillInfo& InData)
 	Skill->UpdateSkillInfo(InData);
 }
 
+void USkillComponent::TryStartSkill(USkill* Skill)
+{
+	if (!Skill) return;
+	
+	OnSkillStarted.Broadcast(Skill);
+	Skill->OnSkillStarted();
+	Skill->PostSkillStarted();
+}
+
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
 {
 	AppliedEffects.Add(Effect);
@@ -85,7 +94,9 @@ bool USkillComponent::BindSkillToInput(const TSubclassOf<USkill> SkillClass, con
 	if (!Skill || !Controller || !Controller->InputComponent || !Controller->IsLocalPlayerController())
 		return false;
 
-	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::OnSkillInputReceived);
+	// TODO: Currently calls the skill's callback function directly which it's not supposed to. May cause some issues.
+	// TODO: On hold due to old InputComponent class not supporting binding of functions with params.
+	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::OnSkillStarted);
 	return true;
 }
 
@@ -99,7 +110,8 @@ bool USkillComponent::BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillCl
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Controller->InputComponent))
 	{
-		FEnhancedInputActionEventBinding& Binding = EnhancedInputComponent->BindAction(InputAction, TriggerEvent, Skill, &USkill::OnSkillInputReceived);
+		FEnhancedInputActionEventBinding& Binding = 
+			EnhancedInputComponent->BindAction<USkillComponent, USkill*>(InputAction, TriggerEvent, this, &USkillComponent::TryStartSkill, Skill);
 		return true;
 	}
 	return false;
@@ -195,6 +207,17 @@ void USkillComponent::TickComponent(const float DeltaTime, const ELevelTick Tick
 	{
 		Effect->NativeTick(DeltaTime);
 	}
+}
+
+void USkillComponent::LogSkillAttempt(const USkill* Skill)
+{
+	if (!Skill) return;
+	
+	FSkillUsage NewSkillUsage;
+	NewSkillUsage.SkillClass = Skill->GetClass();
+	NewSkillUsage.ClientSendInputTime = FDateTime::UtcNow();
+
+	SkillUsageLogs.Add(NewSkillUsage);
 }
 
 void USkillComponent::ClientOnSkillExecutionFailed_Implementation(USkill* Skill, const FString& ErrorLog)

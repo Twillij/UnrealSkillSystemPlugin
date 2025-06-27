@@ -45,12 +45,12 @@ void USkill::UpdateSkillInfo_Implementation(const FSkillInfo& SkillInfo)
 	SkillLevel = SkillInfo.SkillLevel;
 }
 
-void USkill::OnSkillInputReceived_Implementation()
+void USkill::PostSkillStarted_Implementation()
 {
-	ServerActivateSkill();
+	ServerTryActivateSkill();
 }
 
-void USkill::ServerActivateSkill_Implementation()
+void USkill::ServerTryActivateSkill_Implementation()
 {
 	FString ErrorLog;
 	if (CanSkillBeActivated(ErrorLog))
@@ -63,7 +63,17 @@ void USkill::ServerActivateSkill_Implementation()
 	}
 }
 
-void USkill::ServerTerminateSkill_Implementation(const ESkillTerminationType TerminationType)
+void USkill::OnSkillActivation_Implementation()
+{
+	DurationTimer = Duration;
+}
+
+void USkill::PostSkillActivation_Implementation()
+{
+	if (IsServer()) ServerTryTerminateSkill(ESkillTerminationType::Expired);
+}
+
+void USkill::ServerTryTerminateSkill_Implementation(const ESkillTerminationType TerminationType)
 {
 	FString ErrorLog;
 	if (CanSkillBeTerminated(TerminationType, ErrorLog))
@@ -74,11 +84,6 @@ void USkill::ServerTerminateSkill_Implementation(const ESkillTerminationType Ter
 	{
 		// TODO: Handle error
 	}
-}
-
-void USkill::OnSkillActivation_Implementation()
-{
-	DurationTimer = Duration;
 }
 
 void USkill::OnSkillTermination_Implementation(const ESkillTerminationType TerminationType)
@@ -111,10 +116,12 @@ void USkill::PostInitProperties()
 
 void USkill::Tick_Implementation(const float DeltaSeconds)
 {
+	if (!bEnableTick) return;
+	
 	if (DurationTimer > 0)
 	{
 		DurationTimer -= DeltaSeconds;
-		if (DurationTimer <= 0 && IsServer()) ServerTerminateSkill(ESkillTerminationType::Expired);
+		if (DurationTimer <= 0) PostSkillActivation();
 	}
 	else if (CooldownTimer > 0)
 	{

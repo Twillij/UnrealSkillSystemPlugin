@@ -2,13 +2,13 @@
 
 #include "Components/ActorComponent.h"
 #include "EnhancedInputComponent.h"
-#include "Skill.h"
 #include "SkillGlobals.h"
 #include "SkillComponent.generated.h"
 
 class USkillEffect;
 class USkill;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillAttempt, USkill*, Skill);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillActivated, USkill*, Skill);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillTerminated, USkill*, Skill, ESkillTerminationType, TerminationType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillValidationError, USkill*, Skill, const FString&, ErrorLog);
@@ -19,6 +19,9 @@ class SKILLSYSTEM_API USkillComponent : public UActorComponent
     GENERATED_BODY()
 
 public:
+    UPROPERTY(BlueprintAssignable)
+    FOnSkillAttempt OnSkillStarted;
+    
     UPROPERTY(BlueprintAssignable)
     FOnSkillActivated OnSkillActivated;
 
@@ -49,6 +52,9 @@ protected:
     // A replicated array of currently applied effects
     UPROPERTY(Replicated)
     TArray<USkillEffect*> AppliedEffects;
+
+    UPROPERTY(BlueprintReadOnly)
+    TArray<FSkillUsage> SkillUsageLogs;
 
 public:
     USkillComponent();
@@ -95,6 +101,9 @@ public:
     // Processes a skill data and either updates an existing skill or creates a new one.
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void ProcessSkillInfo(const FSkillInfo& InData);
+
+    UFUNCTION(BlueprintCallable, Category = "Skill")
+    void TryStartSkill(USkill* Skill);
     
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
@@ -145,4 +154,7 @@ protected:
     
     UFUNCTION(Client, Reliable, Category = "Skill|Execution")
     void ClientOnSkillCastFailed(USkill* Skill, const FString& ErrorLog);
+
+    UFUNCTION()
+    void LogSkillAttempt(const USkill* Skill);
 };

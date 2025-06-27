@@ -7,17 +7,12 @@ UCastingSkill::UCastingSkill()
 	bPassive = false;
 }
 
-void UCastingSkill::OnSkillInputReceived_Implementation()
-{
-	ServerCastSkill();
-}
-
 void UCastingSkill::SetCastTimer(const float NewTimer)
 {
 	CastTimer = NewTimer;
 	if (CastTimer >= 0 && IsServer())
 	{
-		ServerActivateSkill();
+		ServerTryActivateSkill();
 	}
 }
 

@@ -2,6 +2,7 @@
 
 #include "SkillGlobals.generated.h"
 
+class USkillComponent;
 class USkill;
 
 UENUM(BlueprintType)
@@ -33,13 +34,29 @@ struct FSkillInfo : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FSkillUsageLog
+struct FSkillUsage
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString OwnerName;
+	UPROPERTY(BlueprintReadWrite)
+	int32 Handle = -1;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FSkillInfo SkillInfo;
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<USkill> SkillClass;
+	
+	// The time that the client sends a request to the server to process an inputted command to use a skill
+	UPROPERTY(BlueprintReadWrite)
+	FDateTime ClientSendInputTime;
+
+	// The time that the server receives an inputted command from the client to use a skill
+	UPROPERTY(BlueprintReadWrite)
+	FDateTime ServerReceiveInputTime;
+
+	// The time that the server sends a response to the client on whether to use a skill
+	UPROPERTY(BlueprintReadWrite)
+	FDateTime ServerSendResponseTime;
+
+	// The time that the client receives a response from the server on whether to use a skill
+	UPROPERTY(BlueprintReadWrite)
+	FDateTime ClientReceiveResponseTime;
 };
