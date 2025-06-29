@@ -20,15 +20,6 @@ protected:
 
 public:
 	UCastingSkill();
-	
-	UFUNCTION(BlueprintCallable, Category = "Skill")
-	void SetCastTimer(const float NewTimer);
-	float GetCastTimer() const { return CastTimer; }
-
-	// Attempts to cast the skill after doing a validation check on the server.
-	// Note: Only call this when overriding OnSkillInputReceived().
-	UFUNCTION(Server, Reliable, Category = "Skill")
-	void ServerCastSkill();
 
 	// Implements custom code for validating a skill before it can be cast.
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill")

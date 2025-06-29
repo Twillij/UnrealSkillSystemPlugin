@@ -45,13 +45,22 @@ void USkill::UpdateSkillInfo_Implementation(const FSkillInfo& SkillInfo)
 	SkillLevel = SkillInfo.SkillLevel;
 }
 
-void USkill::PostSkillStarted_Implementation()
+void USkill::TryStartSkill()
 {
-	ServerTryActivateSkill();
+	OnSkillStarted();
+	PostSkillStarted();
 }
 
-void USkill::ServerTryActivateSkill_Implementation()
+void USkill::PostSkillStarted_Implementation()
 {
+	FSkillPing Ping;
+	Ping.ClientSendRequestTime = FDateTime::UtcNow();
+	ServerTryActivateSkill(Ping);
+}
+
+void USkill::ServerTryActivateSkill_Implementation(FSkillPing SkillPing)
+{
+	SkillPing.ServerReceiveRequestTime = FDateTime::UtcNow();
 	FString ErrorLog;
 	if (CanSkillBeActivated(ErrorLog))
 	{

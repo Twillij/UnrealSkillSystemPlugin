@@ -90,6 +90,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void UpdateSkillInfo(const FSkillInfo& SkillInfo);
 
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	void TryStartSkill();
+	
 	// Called from the SkillComponent's TryStartSkill().
 	// Override for custom implementation.
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
@@ -103,7 +106,7 @@ public:
 	
 	// Attempts to activate skill after doing a validation check on the server.
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill")
-	void ServerTryActivateSkill();
+	void ServerTryActivateSkill(FSkillPing SkillPing);
 	
 	// Checks whether skill can be activated.
 	// Override for custom implementation.

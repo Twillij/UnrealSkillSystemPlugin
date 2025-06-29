@@ -54,7 +54,7 @@ protected:
     TArray<USkillEffect*> AppliedEffects;
 
     UPROPERTY(BlueprintReadOnly)
-    TArray<FSkillUsage> SkillUsageLogs;
+    TArray<FSkillPing> SkillUsageLogs;
 
 public:
     USkillComponent();

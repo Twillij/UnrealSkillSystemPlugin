@@ -7,28 +7,6 @@ UCastingSkill::UCastingSkill()
 	bPassive = false;
 }
 
-void UCastingSkill::SetCastTimer(const float NewTimer)
-{
-	CastTimer = NewTimer;
-	if (CastTimer >= 0 && IsServer())
-	{
-		ServerTryActivateSkill();
-	}
-}
-
-void UCastingSkill::ServerCastSkill_Implementation()
-{
-	FString ErrorLog;
-	if (CanSkillBeCast(ErrorLog))
-	{
-		MulticastCastSkill();
-	}
-	else
-	{
-		// TODO: Handle error
-	}
-}
-
 inline void UCastingSkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

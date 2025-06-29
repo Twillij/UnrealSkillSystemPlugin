@@ -34,29 +34,35 @@ struct FSkillInfo : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FSkillUsage
+struct FSkillPing
 {
 	GENERATED_BODY()
 
+	// A unique identifier for the ping
 	UPROPERTY(BlueprintReadWrite)
 	int32 Handle = -1;
-	
+
+	// The class of the skill that initiated the ping
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<USkill> SkillClass;
 	
-	// The time that the client sends a request to the server to process an inputted command to use a skill
+	// The time that the client sends a request to the server
 	UPROPERTY(BlueprintReadWrite)
-	FDateTime ClientSendInputTime;
+	FDateTime ClientSendRequestTime;
 
-	// The time that the server receives an inputted command from the client to use a skill
+	// The time that the server receives a request from the client
 	UPROPERTY(BlueprintReadWrite)
-	FDateTime ServerReceiveInputTime;
+	FDateTime ServerReceiveRequestTime;
 
-	// The time that the server sends a response to the client on whether to use a skill
+	// The time that the server sends a response to the client
 	UPROPERTY(BlueprintReadWrite)
 	FDateTime ServerSendResponseTime;
 
-	// The time that the client receives a response from the server on whether to use a skill
+	// The time that the client receives a response from the server
 	UPROPERTY(BlueprintReadWrite)
 	FDateTime ClientReceiveResponseTime;
+
+	// Log string for any additional information about the ping
+	UPROPERTY(BlueprintReadWrite)
+	FString LogString;
 };
