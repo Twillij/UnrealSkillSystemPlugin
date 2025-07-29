@@ -5,6 +5,7 @@
 #include "SkillGlobals.h"
 #include "Skill.generated.h"
 
+class USkillState;
 class USkill;
 class USkillComponent;
 class USkillEffect;
@@ -58,6 +59,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<TSubclassOf<USkillEffect>> Effects;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<USkillState>> States;
+
 protected:
 	// The timer used for counting down activation duration
 	UPROPERTY(BlueprintReadWrite)
@@ -66,6 +70,9 @@ protected:
 	// The timer used for counting down cooldown
 	UPROPERTY(BlueprintReadWrite)
 	float CooldownTimer = 0;
+
+	UPROPERTY(BlueprintREadOnly)
+	USkillState* CurrentState;
 	
 public:
 	UFUNCTION(BlueprintPure)
@@ -151,10 +158,6 @@ protected:
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitProperties() override;
-	
-	UFUNCTION(BlueprintNativeEvent)
-	void BeginPlay();
-	void BeginPlay_Implementation() {}
 
 private:
 	UFUNCTION(NetMulticast, Reliable, Category = "Skill")

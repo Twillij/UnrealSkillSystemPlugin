@@ -3,6 +3,7 @@
 #include "SkillEffect.h"
 #include "SkillSystem.h"
 #include "Net/UnrealNetwork.h"
+#include "SkillStates/SkillState.h"
 
 USkillComponent* USkill::GetOwningComponent() const
 {
@@ -119,7 +120,6 @@ void USkill::PostInitProperties()
 		{
 			UE_LOG(LogSkill, Error, TEXT("%s has an invalid skill outer. Outer is expected to be its owning skill component."), *GetName())
 		}
-		BeginPlay();
 	}
 }
 
@@ -136,6 +136,8 @@ void USkill::Tick_Implementation(const float DeltaSeconds)
 	{
 		CooldownTimer -= DeltaSeconds;
 	}
+
+	CurrentState->Tick(DeltaSeconds);
 }
 
 void USkill::MulticastActivateSkill_Implementation()
