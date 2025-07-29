@@ -106,7 +106,7 @@ public:
 	
 	// Attempts to activate skill after doing a validation check on the server.
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill")
-	void ServerTryActivateSkill(FSkillPing SkillPing);
+	void ServerTryActivateSkill(int32 ConnectionId, FDateTime ConnectionSendTime);
 	
 	// Checks whether skill can be activated.
 	// Override for custom implementation.

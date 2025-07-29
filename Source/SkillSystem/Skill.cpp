@@ -53,14 +53,14 @@ void USkill::TryStartSkill()
 
 void USkill::PostSkillStarted_Implementation()
 {
-	FSkillPing Ping;
+	FSkillPingInfo Ping;
 	Ping.ClientSendRequestTime = FDateTime::UtcNow();
-	ServerTryActivateSkill(Ping);
+	ServerTryActivateSkill(GetOwningComponent()->GenerateConnectionId(), FDateTime::UtcNow());
 }
 
-void USkill::ServerTryActivateSkill_Implementation(FSkillPing SkillPing)
+void USkill::ServerTryActivateSkill_Implementation(int32 ConnectionId, FDateTime ConnectionSendTime)
 {
-	SkillPing.ServerReceiveRequestTime = FDateTime::UtcNow();
+	// TODO: Log connection times
 	FString ErrorLog;
 	if (CanSkillBeActivated(ErrorLog))
 	{

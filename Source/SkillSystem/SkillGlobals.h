@@ -34,7 +34,7 @@ struct FSkillInfo : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FSkillPing
+struct FSkillPingInfo
 {
 	GENERATED_BODY()
 
@@ -42,7 +42,7 @@ struct FSkillPing
 	UPROPERTY(BlueprintReadWrite)
 	int32 Handle = -1;
 
-	// The class of the skill that initiated the ping
+	// The class of the skill associated with the ping
 	UPROPERTY(BlueprintReadWrite)
 	TSubclassOf<USkill> SkillClass;
 	

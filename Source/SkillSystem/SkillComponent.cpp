@@ -213,7 +213,7 @@ void USkillComponent::LogSkillAttempt(const USkill* Skill)
 {
 	if (!Skill) return;
 	
-	FSkillPing NewSkillUsage;
+	FSkillPingInfo NewSkillUsage;
 	NewSkillUsage.SkillClass = Skill->GetClass();
 	NewSkillUsage.ClientSendRequestTime = FDateTime::UtcNow();
 

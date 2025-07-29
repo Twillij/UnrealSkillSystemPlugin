@@ -54,7 +54,10 @@ protected:
     TArray<USkillEffect*> AppliedEffects;
 
     UPROPERTY(BlueprintReadOnly)
-    TArray<FSkillPing> SkillUsageLogs;
+    TArray<FSkillPingInfo> SkillUsageLogs;
+
+    // TODO: Create an actual hashing system for generating connection Ids
+    int32 LastConnectionId = 0;
 
 public:
     USkillComponent();
@@ -130,6 +133,9 @@ public:
     // Processes the provided skill data on the server and replicates any data changes back to the owning client.
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill|Network")
     void ServerDownloadSkillInfo(const TArray<FSkillInfo>& InDataArray);
+
+    UFUNCTION(BlueprintPure)
+    int32 GenerateConnectionId() const { return LastConnectionId + 1; }
     
     UFUNCTION(BlueprintPure, Category = "Debug")
     FString GetClassName() const { return GetClass()->GetName(); }
