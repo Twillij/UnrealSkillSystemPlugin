@@ -63,18 +63,15 @@ public:
 	TArray<TSubclassOf<USkillState>> States;
 
 protected:
-	// The timer used for counting down activation duration
-	UPROPERTY(BlueprintReadWrite)
-	float DurationTimer = 0;
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	USkillState* CurrentState = nullptr;
 
-	// The timer used for counting down cooldown
-	UPROPERTY(BlueprintReadWrite)
-	float CooldownTimer = 0;
-
-	UPROPERTY(BlueprintREadOnly)
-	USkillState* CurrentState;
+	UPROPERTY(BlueprintReadOnly)
+	int32 CurrentStateIndex = -1;
 	
 public:
+	USkill();
+	
 	UFUNCTION(BlueprintPure)
 	USkillComponent* GetOwningComponent() const;
 
@@ -99,51 +96,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Skill")
 	void TryStartSkill();
-	
-	// Called from the SkillComponent's TryStartSkill().
-	// Override for custom implementation.
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	void OnSkillStarted();
-	void OnSkillStarted_Implementation() {}
-	
-	// Default implementation calls TryActivateSkill().
-	// Override only if you need to change the skill workflow.
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	void PostSkillStarted();
-	
-	// Attempts to activate skill after doing a validation check on the server.
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill")
-	void ServerTryActivateSkill(int32 ConnectionId, FDateTime ConnectionSendTime);
-	
-	// Checks whether skill can be activated.
-	// Override for custom implementation.
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill")
-	bool CanSkillBeActivated(FString& ErrorLog) const;
-	bool CanSkillBeActivated_Implementation(FString& ErrorLog) const { return true; }
 
-	// Called on both client and server when server confirms that skill can be activated.
-	// Override for custom implementation.
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	void OnSkillActivation();
+	// UFUNCTION(Server, Reliable)
+	// void ServerChangeState();
 
-	// Default implementation calls the SkillComponent's TryTerminateSkill().
-	// Override only if you need to change the skill workflow.
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	void PostSkillActivation();
-
-	// Attempts to terminate the skill after doing a validation check on the server.
-	// Note: Only call this when overriding OnSkillInputReceived().
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Skill")
-	void ServerTryTerminateSkill(const ESkillTerminationType TerminationType);
-	
-	// Implements custom code for validating a skill before it can be terminated.
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Skill")
-	bool CanSkillBeTerminated(ESkillTerminationType TerminationType, FString& ErrorLog) const;
-	bool CanSkillBeTerminated_Implementation(ESkillTerminationType TerminationType, FString& ErrorLog) const { return true; }
-
-	// Implements custom code for skill termination, called on both server and client after being validated.
-	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
-	void OnSkillTermination(const ESkillTerminationType TerminationType);
+	UFUNCTION(Server, Reliable)
+	void ServerChangeStateByIndex(int32 NewStateIndex);
 	
 	UFUNCTION(BlueprintPure, Category = "Debug")
 	FString GetClassName() const { return GetClass()->GetName(); }
@@ -160,9 +118,6 @@ protected:
 	virtual void PostInitProperties() override;
 
 private:
-	UFUNCTION(NetMulticast, Reliable, Category = "Skill")
-	void MulticastActivateSkill();
-
-	UFUNCTION(NetMulticast, Reliable, Category = "Skill")
-	void MulticastTerminateSkill(const ESkillTerminationType TerminationType);
+	//UFUNCTION(NetMulticast, Reliable, Category = "Skill")
+	//void MulticastChangeState();
 };

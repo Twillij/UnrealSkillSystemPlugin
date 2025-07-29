@@ -12,16 +12,25 @@ class SKILLSYSTEM_API USkillState : public UObject
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintReadWrite)
+	float StateDuration = 0;
+	
+protected:
 	UPROPERTY(BlueprintReadOnly)
-	USkill* OwningSkill;
+	USkill* OwningSkill = nullptr;
 
+	UPROPERTY(BlueprintReadOnly)
+	float StateTimer = 0;
+
+public:
+	USkillState() {}
 	explicit USkillState(USkill* InOwningSkill) : OwningSkill(InOwningSkill) {}
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void Tick(const float DeltaSeconds);
 
 	UFUNCTION(BlueprintCallable)
-	void TryEnterState();
+	bool TryEnterState();
 	
 	UFUNCTION(BlueprintNativeEvent)
 	bool CanEnterState() const;
@@ -30,7 +39,7 @@ public:
 	void OnStateEntered();
 
 	UFUNCTION(BlueprintCallable)
-	void TryExitState();
+	bool TryExitState();
 	
 	UFUNCTION(BlueprintNativeEvent)
 	bool CanExitState() const;
@@ -39,11 +48,13 @@ public:
 	void OnStateExited();
 
 protected:
-	virtual void Tick_Implementation(const float DeltaSeconds) {}
+	virtual bool IsSupportedForNetworking() const override { return true; }
 	
-	virtual bool CanEnterState_Implementation() const { return OwningSkill; }
-	virtual void OnStateEntered_Implementation() {}
+	virtual void Tick_Implementation(const float DeltaSeconds);
 	
-	virtual bool CanExitState_Implementation() const { return OwningSkill; }
+	virtual bool CanEnterState_Implementation() const { return IsValid(OwningSkill); }
+	virtual void OnStateEntered_Implementation() { StateTimer = StateDuration; }
+	
+	virtual bool CanExitState_Implementation() const { return IsValid(OwningSkill); }
 	virtual void OnStateExited_Implementation() {}
 };

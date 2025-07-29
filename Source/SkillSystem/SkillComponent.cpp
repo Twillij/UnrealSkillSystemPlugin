@@ -77,8 +77,6 @@ void USkillComponent::TryStartSkill(USkill* Skill)
 	if (!Skill) return;
 	
 	OnSkillStarted.Broadcast(Skill);
-	Skill->OnSkillStarted();
-	Skill->PostSkillStarted();
 }
 
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
@@ -96,7 +94,7 @@ bool USkillComponent::BindSkillToInput(const TSubclassOf<USkill> SkillClass, con
 
 	// TODO: Currently calls the skill's callback function directly which it's not supposed to. May cause some issues.
 	// TODO: On hold due to old InputComponent class not supporting binding of functions with params.
-	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::OnSkillStarted);
+	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::TryStartSkill);
 	return true;
 }
 
