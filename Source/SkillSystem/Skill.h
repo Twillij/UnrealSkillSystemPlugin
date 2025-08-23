@@ -57,17 +57,17 @@ public:
 	
 	// An array of effects that will be applied when this skill is activated
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<TSubclassOf<USkillEffect>> Effects;
-
+	TArray<TSubclassOf<USkillEffect>> EffectClasses;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<TSubclassOf<USkillState>> States;
+	TArray<TSubclassOf<USkillState>> StateClasses;
 
 protected:
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	USkillState* CurrentState = nullptr;
-
 	UPROPERTY(BlueprintReadOnly)
-	int32 CurrentStateIndex = -1;
+	TArray<USkillState*> States;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 CurrentStateIndex = 0;
 	
 public:
 	USkill();
@@ -96,21 +96,34 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Skill")
 	void TryStartSkill();
+	
+	UFUNCTION(BlueprintPure)
+	USkillState* GetCurrentState() const { return States.IsValidIndex(CurrentStateIndex) ? States[CurrentStateIndex] : nullptr; }
+	
+	UFUNCTION(BlueprintPure)
+	USkillState* GetStateById(const FName StateId) const;
 
-	// UFUNCTION(Server, Reliable)
-	// void ServerChangeState();
-
+	UFUNCTION(BlueprintPure)
+	int32 GetStateIndexById(const FName StateId) const;
+	
+	UFUNCTION(BlueprintCallable)
+	void BindToStateEntry(const FName StateName, const FSkillStateDelegate& Delegate) const;
+	
+	UFUNCTION(BlueprintCallable)
+	void BindToStateExit(const FName StateName, const FSkillStateDelegate& Delegate) const;
+	
 	UFUNCTION(Server, Reliable)
-	void ServerChangeStateByIndex(int32 NewStateIndex);
+	void ServerChangeState(const FName NewStateId, const ESkillStateExitReason ChangeReason);
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void BlueprintTick(const float DeltaSeconds);
+	virtual void NativeTick(const float DeltaSeconds);
 	
 	UFUNCTION(BlueprintPure, Category = "Debug")
 	FString GetClassName() const { return GetClass()->GetName(); }
 	
 	UFUNCTION(BlueprintPure, Category = "Debug")
 	FString GetLockedStatusAsString() const { return bUnlocked ? "Unlocked" : "Locked"; }
-
-	UFUNCTION(BlueprintNativeEvent)
-	void Tick(const float DeltaSeconds);
 	
 protected:
 	virtual bool IsSupportedForNetworking() const override { return true; }
@@ -120,4 +133,7 @@ protected:
 private:
 	//UFUNCTION(NetMulticast, Reliable, Category = "Skill")
 	//void MulticastChangeState();
+
+	void HandleStateEntry(const USkillState* NewState);
+	void HandleStateExit(const USkillState* CurrentState, const ESkillStateExitReason ExitReason);
 };

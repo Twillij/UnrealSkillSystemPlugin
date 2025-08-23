@@ -3,11 +3,12 @@
 #include "SkillSystem.h"
 #include "Net/UnrealNetwork.h"
 #include "SkillStates/SkillState.h"
-#include "SkillStates/SkillStateActivation.h"
+#include "SkillStates/SkillStateActive.h"
 
 USkill::USkill()
 {
-	States.Add(USkillStateActivation::StaticClass());
+	StateClasses.Add(USkillState::StaticClass());
+	StateClasses.Add(USkillStateActive::StaticClass());
 }
 
 USkillComponent* USkill::GetOwningComponent() const
@@ -53,23 +54,73 @@ void USkill::UpdateSkillInfo_Implementation(const FSkillInfo& SkillInfo)
 
 void USkill::TryStartSkill()
 {
-	ServerChangeStateByIndex(0);
+	//ServerChangeStateByIndex(0);
 }
 
-// void USkill::ServerChangeState_Implementation(const TSubclassOf<USkillState> NewState)
-// {
-// 	if (CurrentState->TryEnterState())
-// 	{
-// 		CurrentState = NewObject<USkillState>(this, NewState);
-// 	}
-// }
-
-void USkill::ServerChangeStateByIndex_Implementation(const int32 NewStateIndex)
+USkillState* USkill::GetStateById(const FName StateId) const
 {
-	if (States.IsValidIndex(NewStateIndex))
+	for (USkillState* State : States)
 	{
-		//ServerChangeState(States[NewStateIndex]);
+		if (State && State->StateId == StateId)
+		{
+			return State;
+		}
 	}
+	return nullptr;
+}
+
+int32 USkill::GetStateIndexById(const FName StateId) const
+{
+	for (int i = 0; i < States.Num(); ++i)
+	{
+		if (States[i] && States[i]->StateId == StateId)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+void USkill::BindToStateEntry(const FName StateName, const FSkillStateDelegate& Delegate) const
+{
+	if (USkillState* State = GetStateById(StateName))
+	{
+		State->OnStateEnteredDelegate.Add(Delegate);
+	}
+}
+
+void USkill::BindToStateExit(const FName StateName, const FSkillStateDelegate& Delegate) const
+{
+	if (USkillState* State = GetStateById(StateName))
+	{
+		State->OnStateExitedDelegate.Add(Delegate);
+	}
+}
+
+void USkill::ServerChangeState_Implementation(const FName NewStateId, const ESkillStateExitReason ChangeReason)
+{
+	const int32 NewStateIndex = GetStateIndexById(NewStateId);
+	
+	if (NewStateIndex < 0)
+	{
+		return;
+	}
+	
+	USkillState* CurrentState = GetCurrentState();
+	
+	if (!CurrentState || !CurrentState->TryExitState(ChangeReason))
+	{
+		return;
+	}
+
+	USkillState* NewState = States[NewStateIndex];
+	
+	if (!NewState->TryEnterState())
+	{
+		return;
+	}
+	
+	CurrentStateIndex = NewStateIndex;
 }
 
 void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -79,7 +130,6 @@ void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePr
 	DOREPLIFETIME(USkill, SkillLevel);
 	DOREPLIFETIME(USkill, Duration);
 	DOREPLIFETIME(USkill, Cooldown);
-	DOREPLIFETIME(USkill, CurrentState);
 }
 
 void USkill::PostInitProperties()
@@ -95,10 +145,13 @@ void USkill::PostInitProperties()
 	}
 }
 
-void USkill::Tick_Implementation(const float DeltaSeconds)
+void USkill::NativeTick(const float DeltaSeconds)
 {
 	if (bEnableTick)
 	{
-		CurrentState->Tick(DeltaSeconds);
+		if (USkillState* CurrentState = GetCurrentState())
+		{
+			CurrentState->Tick(DeltaSeconds);
+		}
 	}
 }

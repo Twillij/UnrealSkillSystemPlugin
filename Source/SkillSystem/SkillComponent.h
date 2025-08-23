@@ -10,7 +10,7 @@ class USkill;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillAttempt, USkill*, Skill);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillActivated, USkill*, Skill);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillTerminated, USkill*, Skill, ESkillTerminationType, TerminationType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillTerminated, USkill*, Skill, ESkillStateExitReason, TerminationType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillValidationError, USkill*, Skill, const FString&, ErrorLog);
 
 UCLASS(Blueprintable)

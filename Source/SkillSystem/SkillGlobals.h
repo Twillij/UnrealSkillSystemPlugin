@@ -5,14 +5,16 @@
 class USkillComponent;
 class USkill;
 
+DECLARE_DYNAMIC_DELEGATE(FSkillStateDelegate);
+
 UENUM(BlueprintType)
-enum class ESkillTerminationType : uint8
+enum class ESkillStateExitReason : uint8
 {
 	Expired,
 	Cancelled,
-	Interrupted,
 	Invalidated,
-	Misc
+	Interrupted,
+	Other
 };
 
 USTRUCT(BlueprintType)

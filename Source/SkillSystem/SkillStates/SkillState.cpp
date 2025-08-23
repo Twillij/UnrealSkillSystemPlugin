@@ -1,15 +1,30 @@
 #include "SkillState.h"
 
+#include "Skill.h"
+
 void USkillState::Tick_Implementation(const float DeltaSeconds)
 {
-	if (StateTimer > 0)
+	if (bIsActive)
 	{
-		StateTimer -= DeltaSeconds;
-		if (StateTimer < 0)
+		// Check whether the state uses a timer-based duration before ticking the timer
+		if (StateDuration > 0)
 		{
-			TryExitState();
+			StateTimer -= DeltaSeconds;
+			if (StateTimer < 0)
+			{
+				OwningSkill->ServerChangeState(GetNextState(ESkillStateExitReason::Expired), ESkillStateExitReason::Expired);
+			}
 		}
 	}
+}
+
+FName USkillState::GetNextState(const ESkillStateExitReason ExitReason) const
+{
+	if (const FName* NextStatePtr = NextStateOverrides.Find(ExitReason))
+	{
+		return *NextStatePtr;
+	}
+	return DefaultNextState;
 }
 
 bool USkillState::TryEnterState()
@@ -17,16 +32,18 @@ bool USkillState::TryEnterState()
 	if (CanEnterState())
 	{
 		OnStateEntered();
+		OnStateEnteredDelegate.Broadcast();
 		return true;
 	}
 	return false;
 }
 
-bool USkillState::TryExitState()
+bool USkillState::TryExitState(const ESkillStateExitReason ExitReason)
 {
-	if (CanExitState())
+	if (CanExitState(ExitReason))
 	{
-		OnStateExited();
+		OnStateExited(ExitReason);
+		OnStateExitedDelegate.Broadcast();
 		return true;
 	}
 	return false;
