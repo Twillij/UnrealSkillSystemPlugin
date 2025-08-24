@@ -4,6 +4,7 @@
 USkillStateActive::USkillStateActive()
 {
 	StateId = "Active";
+	DefaultNextState = "Inactive";
 	NextStateOverrides.Add(ESkillStateExitReason::Expired, "Cooldown");
 }
 

@@ -13,6 +13,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSkillActivated, USkill*, Skill);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillTerminated, USkill*, Skill, ESkillStateExitReason, TerminationType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillValidationError, USkill*, Skill, const FString&, ErrorLog);
 
+DECLARE_DELEGATE_OneParam(FSkillDelegate, USkill*)
+
 UCLASS(Blueprintable)
 class SKILLSYSTEM_API USkillComponent : public UActorComponent
 {
@@ -151,7 +153,7 @@ public:
 
 protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    virtual void OnRegister() override;
+    virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void TickComponent(const float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

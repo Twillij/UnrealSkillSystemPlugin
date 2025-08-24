@@ -1,19 +1,15 @@
 #include "SkillState.h"
-
 #include "Skill.h"
 
 void USkillState::Tick_Implementation(const float DeltaSeconds)
 {
-	if (bIsActive)
+	// Check whether the state uses a timer-based duration before ticking the timer
+	if (StateDuration >= 0)
 	{
-		// Check whether the state uses a timer-based duration before ticking the timer
-		if (StateDuration > 0)
+		StateTimer -= DeltaSeconds;
+		if (StateTimer <= 0)
 		{
-			StateTimer -= DeltaSeconds;
-			if (StateTimer < 0)
-			{
-				OwningSkill->ServerChangeState(GetNextState(ESkillStateExitReason::Expired), ESkillStateExitReason::Expired);
-			}
+			OwningSkill->ServerChangeState(GetNextState(ESkillStateExitReason::Expired), ESkillStateExitReason::Expired);
 		}
 	}
 }

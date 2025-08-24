@@ -10,6 +10,7 @@ DECLARE_DYNAMIC_DELEGATE(FSkillStateDelegate);
 UENUM(BlueprintType)
 enum class ESkillStateExitReason : uint8
 {
+	None,
 	Expired,
 	Cancelled,
 	Invalidated,

@@ -57,6 +57,11 @@ void USkill::TryStartSkill()
 	//ServerChangeStateByIndex(0);
 }
 
+FName USkill::GetNextStateId(const ESkillStateExitReason Reason) const
+{
+	return CurrentState ? CurrentState->GetNextState(Reason) : NAME_None;
+}
+
 USkillState* USkill::GetStateById(const FName StateId) const
 {
 	for (USkillState* State : States)
@@ -99,28 +104,17 @@ void USkill::BindToStateExit(const FName StateName, const FSkillStateDelegate& D
 
 void USkill::ServerChangeState_Implementation(const FName NewStateId, const ESkillStateExitReason ChangeReason)
 {
-	const int32 NewStateIndex = GetStateIndexById(NewStateId);
-	
-	if (NewStateIndex < 0)
-	{
-		return;
-	}
-	
-	USkillState* CurrentState = GetCurrentState();
-	
-	if (!CurrentState || !CurrentState->TryExitState(ChangeReason))
+	if (CurrentState && !CurrentState->TryExitState(ChangeReason))
 	{
 		return;
 	}
 
-	USkillState* NewState = States[NewStateIndex];
+	USkillState* NewState = GetStateById(NewStateId);
 	
-	if (!NewState->TryEnterState())
+	if (NewState->TryEnterState())
 	{
-		return;
+		CurrentState = NewState;
 	}
-	
-	CurrentStateIndex = NewStateIndex;
 }
 
 void USkill::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -145,11 +139,29 @@ void USkill::PostInitProperties()
 	}
 }
 
+void USkill::BeginPlay()
+{
+	if (HasAuthority())
+	{
+		for (const UClass* StateClass : StateClasses)
+		{
+			States.Add(NewObject<USkillState>(this, StateClass));
+		}
+		
+		if (States.IsEmpty())
+		{
+			return;
+		}
+		
+		ServerChangeState(States[0]->StateId);
+	}
+}
+
 void USkill::NativeTick(const float DeltaSeconds)
 {
 	if (bEnableTick)
 	{
-		if (USkillState* CurrentState = GetCurrentState())
+		if (CurrentState)
 		{
 			CurrentState->Tick(DeltaSeconds);
 		}

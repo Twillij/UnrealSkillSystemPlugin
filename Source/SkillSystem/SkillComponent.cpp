@@ -77,6 +77,8 @@ void USkillComponent::TryStartSkill(USkill* Skill)
 	if (!Skill) return;
 	
 	OnSkillStarted.Broadcast(Skill);
+
+	Skill->ServerChangeState(Skill->GetNextStateId(ESkillStateExitReason::None)); // TODO: Change this to a skill func.
 }
 
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
@@ -91,10 +93,8 @@ bool USkillComponent::BindSkillToInput(const TSubclassOf<USkill> SkillClass, con
 	
 	if (!Skill || !Controller || !Controller->InputComponent || !Controller->IsLocalPlayerController())
 		return false;
-
-	// TODO: Currently calls the skill's callback function directly which it's not supposed to. May cause some issues.
-	// TODO: On hold due to old InputComponent class not supporting binding of functions with params.
-	FInputActionBinding& Binding = Controller->InputComponent->BindAction(InputActionName, InputEvent, Skill, &USkill::TryStartSkill);
+	
+	Controller->InputComponent->BindAction<FSkillDelegate>(InputActionName, InputEvent, this, &USkillComponent::TryStartSkill, Skill);
 	return true;
 }
 
@@ -160,24 +160,26 @@ void USkillComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(USkillComponent, AppliedEffects);
 }
 
-void USkillComponent::OnRegister()
+void USkillComponent::BeginPlay()
 {
-	Super::OnRegister();
+	Super::BeginPlay();
 
-	if (GetWorld() && GetWorld()->IsGameWorld())
+	if (USkillDebugSubsystem* SkillDebugSubsystem = USkillDebugSubsystem::Get(this))
 	{
-		if (USkillDebugSubsystem* SkillDebugSubsystem = USkillDebugSubsystem::Get(this))
+		SkillDebugSubsystem->RegisterComponent(this);
+	}
+	
+	if (HasAuthority())
+	{
+		// Initialize the preset skills
+		for (int i = 0; i < PresetSkills.Num(); ++i)
 		{
-			SkillDebugSubsystem->RegisterComponent(this);
+			ProcessSkillInfo(PresetSkills[i]);
 		}
-		
-		if (HasAuthority())
+
+		for (USkill* Skill : OwnedSkills)
 		{
-			// Initialize the preset skills
-			for (int i = 0; i < PresetSkills.Num(); ++i)
-			{
-				ProcessSkillInfo(PresetSkills[i]);
-			}
+			Skill->BeginPlay();
 		}
 	}
 }

@@ -17,15 +17,15 @@ class SKILLSYSTEM_API USkillState : public UObject
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName StateId = "Inactive";
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float StateDuration = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName DefaultNextState = "Inactive";
+	FName DefaultNextState = "Active";
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<ESkillStateExitReason, FName> NextStateOverrides;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StateDuration = 0;
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnSkillStateEntered OnStateEnteredDelegate;
@@ -36,9 +36,6 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	USkill* OwningSkill = nullptr;
-	
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsActive = false;
 	
 	UPROPERTY(BlueprintReadOnly)
 	float StateTimer = 0;

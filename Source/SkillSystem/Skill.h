@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "SkillGlobals.h"
+#include "SkillStates/SkillState.h"
 #include "Skill.generated.h"
 
 class USkillState;
@@ -65,9 +66,9 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	TArray<USkillState*> States;
-	
+
 	UPROPERTY(BlueprintReadOnly)
-	int32 CurrentStateIndex = 0;
+	USkillState* CurrentState = nullptr;
 	
 public:
 	USkill();
@@ -97,8 +98,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Skill")
 	void TryStartSkill();
 	
+	USkillState* GetCurrentState() const { return CurrentState; }
+
 	UFUNCTION(BlueprintPure)
-	USkillState* GetCurrentState() const { return States.IsValidIndex(CurrentStateIndex) ? States[CurrentStateIndex] : nullptr; }
+	FName GetNextStateId(const ESkillStateExitReason Reason) const;
 	
 	UFUNCTION(BlueprintPure)
 	USkillState* GetStateById(const FName StateId) const;
@@ -113,7 +116,9 @@ public:
 	void BindToStateExit(const FName StateName, const FSkillStateDelegate& Delegate) const;
 	
 	UFUNCTION(Server, Reliable)
-	void ServerChangeState(const FName NewStateId, const ESkillStateExitReason ChangeReason);
+	void ServerChangeState(const FName NewStateId, const ESkillStateExitReason ChangeReason = ESkillStateExitReason::None);
+
+	virtual void BeginPlay();
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void BlueprintTick(const float DeltaSeconds);
