@@ -13,5 +13,6 @@ public:
 	USkillStateActive();
 	
 protected:
+	virtual FName GetNextStateId_Implementation(const ESkillStateExitReason ExitReason) const override;
 	virtual void OnStateEntered_Implementation() override;
 };

@@ -46,20 +46,19 @@ bool USkill::IsClient() const
 	return Owner ? Owner->IsClient() : false;
 }
 
+USkillState* USkill::GetDefaultState() const
+{
+	if (DefaultStateId.IsNone())
+	{
+		return !States.IsEmpty() ? States[0] : nullptr;
+	}
+	return GetStateById(DefaultStateId);
+}
+
 void USkill::UpdateSkillInfo_Implementation(const FSkillInfo& SkillInfo)
 {
 	bUnlocked = SkillInfo.bUnlocked;
 	SkillLevel = SkillInfo.SkillLevel;
-}
-
-void USkill::TryStartSkill()
-{
-	//ServerChangeStateByIndex(0);
-}
-
-FName USkill::GetNextStateId(const ESkillStateExitReason Reason) const
-{
-	return CurrentState ? CurrentState->GetNextState(Reason) : NAME_None;
 }
 
 USkillState* USkill::GetStateById(const FName StateId) const
@@ -99,6 +98,22 @@ void USkill::BindToStateExit(const FName StateName, const FSkillStateDelegate& D
 	if (USkillState* State = GetStateById(StateName))
 	{
 		State->OnStateExitedDelegate.Add(Delegate);
+	}
+}
+
+void USkill::BindInputToState(const FName StateName, const FEnhancedInputDelegate& Delegate)
+{
+	if (USkillState* State = GetStateById(StateName))
+	{
+		State->OnEnhancedInputReceived.Add(Delegate);
+	}
+}
+
+void USkill::HandleSkillInput(const UInputAction* InputAction, const ETriggerEvent TriggerEvent)
+{
+	if (CurrentState)
+	{
+		CurrentState->HandleSkillInput(InputAction, TriggerEvent);
 	}
 }
 
@@ -153,7 +168,12 @@ void USkill::BeginPlay()
 			return;
 		}
 		
-		ServerChangeState(States[0]->StateId);
+		if (DefaultStateId.IsNone())
+		{
+			DefaultStateId = States[0]->StateId;
+		}
+		
+		ServerChangeState(DefaultStateId);
 	}
 }
 

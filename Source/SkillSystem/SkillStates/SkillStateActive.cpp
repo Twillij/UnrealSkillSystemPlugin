@@ -4,8 +4,17 @@
 USkillStateActive::USkillStateActive()
 {
 	StateId = "Active";
-	DefaultNextState = "Inactive";
-	NextStateOverrides.Add(ESkillStateExitReason::Expired, "Cooldown");
+}
+
+FName USkillStateActive::GetNextStateId_Implementation(const ESkillStateExitReason ExitReason) const
+{
+	switch (ExitReason)
+	{
+	case ESkillStateExitReason::Expired:
+		return "Cooldown";
+	default:
+		return OwningSkill ? OwningSkill->GetDefaultState()->StateId : EName::None;
+	}
 }
 
 void USkillStateActive::OnStateEntered_Implementation()

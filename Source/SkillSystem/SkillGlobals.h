@@ -1,11 +1,15 @@
 #pragma once
 
+#include "InputAction.h"
 #include "SkillGlobals.generated.h"
 
 class USkillComponent;
 class USkill;
 
 DECLARE_DYNAMIC_DELEGATE(FSkillStateDelegate);
+DECLARE_DYNAMIC_DELEGATE_TwoParams(FEnhancedInputDelegate, const UInputAction*, InputAction, const ETriggerEvent, TriggerEvent);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEnhancedInputMulticastDelegate, const UInputAction*, InputAction, const ETriggerEvent, TriggerEvent);
 
 UENUM(BlueprintType)
 enum class ESkillStateExitReason : uint8

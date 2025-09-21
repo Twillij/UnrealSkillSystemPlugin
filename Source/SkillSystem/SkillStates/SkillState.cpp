@@ -9,18 +9,14 @@ void USkillState::Tick_Implementation(const float DeltaSeconds)
 		StateTimer -= DeltaSeconds;
 		if (StateTimer <= 0)
 		{
-			OwningSkill->ServerChangeState(GetNextState(ESkillStateExitReason::Expired), ESkillStateExitReason::Expired);
+			OwningSkill->ServerChangeState(GetNextStateId(ESkillStateExitReason::Expired), ESkillStateExitReason::Expired);
 		}
 	}
 }
 
-FName USkillState::GetNextState(const ESkillStateExitReason ExitReason) const
+FName USkillState::GetNextStateId_Implementation(const ESkillStateExitReason ExitReason) const
 {
-	if (const FName* NextStatePtr = NextStateOverrides.Find(ExitReason))
-	{
-		return *NextStatePtr;
-	}
-	return DefaultNextState;
+	return OwningSkill ? OwningSkill->DefaultStateId : FName();
 }
 
 bool USkillState::TryEnterState()
@@ -43,4 +39,9 @@ bool USkillState::TryExitState(const ESkillStateExitReason ExitReason)
 		return true;
 	}
 	return false;
+}
+
+void USkillState::HandleSkillInput(const UInputAction* InputAction, const ETriggerEvent TriggerEvent) const
+{
+	OnEnhancedInputReceived.Broadcast(InputAction, TriggerEvent);
 }

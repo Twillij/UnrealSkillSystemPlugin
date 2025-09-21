@@ -106,18 +106,11 @@ public:
     // Processes a skill data and either updates an existing skill or creates a new one.
     UFUNCTION(BlueprintCallable, Category = "Skill")
     void ProcessSkillInfo(const FSkillInfo& InData);
-
-    UFUNCTION(BlueprintCallable, Category = "Skill")
-    void TryStartSkill(USkill* Skill);
     
     // Applies a skill effect to this component.
     UFUNCTION(BlueprintCallable, Category = "Skill|Effect")
     void ApplySkillEffect(USkillEffect* Effect);
-
-    // Binds a skill execution to an input action.
-    UFUNCTION(BlueprintCallable, Category = "Skill|Input")
-    bool BindSkillToInput(const TSubclassOf<USkill> SkillClass, const FName InputActionName, const EInputEvent InputEvent);
-
+    
     // Binds a skill execution to an input action.
     UFUNCTION(BlueprintCallable, Category = "Skill|Input")
     bool BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillClass, const UInputAction* InputAction, const ETriggerEvent TriggerEvent);

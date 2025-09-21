@@ -72,30 +72,9 @@ void USkillComponent::ProcessSkillInfo(const FSkillInfo& InData)
 	Skill->UpdateSkillInfo(InData);
 }
 
-void USkillComponent::TryStartSkill(USkill* Skill)
-{
-	if (!Skill) return;
-	
-	OnSkillStarted.Broadcast(Skill);
-
-	Skill->ServerChangeState(Skill->GetNextStateId(ESkillStateExitReason::None)); // TODO: Change this to a skill func.
-}
-
 void USkillComponent::ApplySkillEffect(USkillEffect* Effect)
 {
 	AppliedEffects.Add(Effect);
-}
-
-bool USkillComponent::BindSkillToInput(const TSubclassOf<USkill> SkillClass, const FName InputActionName, const EInputEvent InputEvent)
-{
-	USkill* Skill = GetSkillOfClass(SkillClass);
-	const AController* Controller = GetOwningController();
-	
-	if (!Skill || !Controller || !Controller->InputComponent || !Controller->IsLocalPlayerController())
-		return false;
-	
-	Controller->InputComponent->BindAction<FSkillDelegate>(InputActionName, InputEvent, this, &USkillComponent::TryStartSkill, Skill);
-	return true;
 }
 
 bool USkillComponent::BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillClass, const UInputAction* InputAction, const ETriggerEvent TriggerEvent)
@@ -108,8 +87,9 @@ bool USkillComponent::BindSkillToEnhancedInput(const TSubclassOf<USkill> SkillCl
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Controller->InputComponent))
 	{
-		FEnhancedInputActionEventBinding& Binding = 
-			EnhancedInputComponent->BindAction<USkillComponent, USkill*>(InputAction, TriggerEvent, this, &USkillComponent::TryStartSkill, Skill);
+		FEnhancedInputActionEventBinding& Binding =
+			EnhancedInputComponent->BindAction<USkill, const UInputAction*, const ETriggerEvent>
+			(InputAction, TriggerEvent, Skill, &USkill::HandleSkillInput, InputAction, TriggerEvent);
 		return true;
 	}
 	return false;

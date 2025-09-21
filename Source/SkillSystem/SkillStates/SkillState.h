@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputAction.h"
 #include "SkillGlobals.h"
 #include "SkillState.generated.h"
 
@@ -19,12 +20,6 @@ public:
 	FName StateId = "Inactive";
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName DefaultNextState = "Active";
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<ESkillStateExitReason, FName> NextStateOverrides;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float StateDuration = 0;
 	
 	UPROPERTY(BlueprintAssignable)
@@ -32,6 +27,9 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)
 	FOnSkillStateExited OnStateExitedDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FEnhancedInputMulticastDelegate OnEnhancedInputReceived;
 	
 protected:
 	UPROPERTY(BlueprintReadOnly)
@@ -45,9 +43,9 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void Tick(const float DeltaSeconds);
-
-	UFUNCTION(BlueprintPure)
-	FName GetNextState(const ESkillStateExitReason ExitReason) const;
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
+	FName GetNextStateId(const ESkillStateExitReason ExitReason) const;
 	
 	UFUNCTION(BlueprintCallable)
 	bool TryEnterState();
@@ -66,13 +64,16 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void OnStateExited(const ESkillStateExitReason ExitReason);
-
+	
+	void HandleSkillInput(const UInputAction* InputAction, const ETriggerEvent TriggerEvent) const;
+	
 protected:
 	USkillState() {}
 	
 	virtual bool IsSupportedForNetworking() const override { return true; }
-	
 	virtual void Tick_Implementation(const float DeltaSeconds);
+	
+	virtual FName GetNextStateId_Implementation(const ESkillStateExitReason ExitReason) const;
 	
 	virtual bool CanEnterState_Implementation() const { return true; }
 	virtual void OnStateEntered_Implementation() { StateTimer = StateDuration; }

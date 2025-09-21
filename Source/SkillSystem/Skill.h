@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "InputAction.h"
 #include "SkillGlobals.h"
 #include "SkillStates/SkillState.h"
 #include "Skill.generated.h"
@@ -63,6 +64,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<TSubclassOf<USkillState>> StateClasses;
 
+	// The ID of this skill's default state.
+	// If set to None, then the default state will be the first state in the array.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName DefaultStateId;
+
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	TArray<USkillState*> States;
@@ -95,13 +101,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Skill")
 	void UpdateSkillInfo(const FSkillInfo& SkillInfo);
 
-	UFUNCTION(BlueprintCallable, Category = "Skill")
-	void TryStartSkill();
-	
-	USkillState* GetCurrentState() const { return CurrentState; }
-
 	UFUNCTION(BlueprintPure)
-	FName GetNextStateId(const ESkillStateExitReason Reason) const;
+	USkillState* GetDefaultState() const;
+	USkillState* GetCurrentState() const { return CurrentState; }
 	
 	UFUNCTION(BlueprintPure)
 	USkillState* GetStateById(const FName StateId) const;
@@ -114,6 +116,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void BindToStateExit(const FName StateName, const FSkillStateDelegate& Delegate) const;
+	
+	void BindInputToState(const FName StateName, const FEnhancedInputDelegate& Delegate);
+	
+	void HandleSkillInput(const UInputAction* InputAction, const ETriggerEvent TriggerEvent);
 	
 	UFUNCTION(Server, Reliable)
 	void ServerChangeState(const FName NewStateId, const ESkillStateExitReason ChangeReason = ESkillStateExitReason::None);
